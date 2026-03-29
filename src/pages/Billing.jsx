@@ -208,7 +208,7 @@ const Billing = () => {
       <div className="billing-grid">
         {/* Product Selection */}
         <div style={{ overflowY: 'auto', paddingRight: '8px' }}>
-          <div className="grid-items" style={{ gap: '20px' }}>
+          <div className="items-grid">
             {filteredItems.map(item => (
               <div 
                 key={item.id} 
