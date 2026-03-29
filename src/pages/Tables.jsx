@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { collection, addDoc, onSnapshot, query } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Plus, X, Layout } from 'lucide-react';
+import { Plus, X, Layout, Edit2, Trash2 } from 'lucide-react';
 import '../css/Tables.css';
 
 const Tables = () => {
   const { restaurant } = useAuth();
   const [tables, setTables] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ name: '', shortcode: '' });
   const [loading, setLoading] = useState(false);
 
@@ -25,19 +26,45 @@ const Tables = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await addDoc(collection(db, 'restaurants', restaurant.id, 'tables'), {
+      const tableData = {
         name: formData.name,
         shortcode: formData.shortcode,
-        status: 'available',
-        createdAt: new Date().toISOString()
-      });
-      setShowModal(false);
-      setFormData({ name: '', shortcode: '' });
+        updatedAt: new Date().toISOString()
+      };
+
+      if (editingId) {
+        await updateDoc(doc(db, 'restaurants', restaurant.id, 'tables', editingId), tableData);
+      } else {
+        await addDoc(collection(db, 'restaurants', restaurant.id, 'tables'), {
+          ...tableData,
+          status: 'available',
+          createdAt: new Date().toISOString()
+        });
+      }
+      closeModal();
     } catch (error) {
-      console.error("Error adding table", error);
+      console.error("Error saving table", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const deleteTable = async (id) => {
+    if (window.confirm("Permanent delete this table?")) {
+      await deleteDoc(doc(db, 'restaurants', restaurant.id, 'tables', id));
+    }
+  };
+
+  const openEdit = (table) => {
+    setEditingId(table.id);
+    setFormData({ name: table.name, shortcode: table.shortcode });
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingId(null);
+    setFormData({ name: '', shortcode: '' });
   };
 
   return (
@@ -52,30 +79,49 @@ const Tables = () => {
         </button>
       </div>
 
-      <div className="grid-items">
+      <div className="tables-grid">
         {tables.map(table => (
-          <div key={table.id} className="stat-card">
-            <div className="flex justify-between items-start mb-4">
-              <div style={{ padding: '4px 8px', background: 'var(--bg-app)', borderRadius: '6px', fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)' }}>{table.shortcode}</div>
-              <span className={`badge-status ${table.status === 'available' ? 'status-delivered' : 'status-pending'}`} style={{ fontSize: '10px' }}>
-                {table.status.toUpperCase()}
-              </span>
+          <div key={table.id} className="stat-card table-card" style={{ padding: '32px 24px', textAlign: 'center', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: '12px', left: '12px' }}>
+               <div style={{ padding: '4px 10px', background: 'var(--bg-app)', borderRadius: '6px', fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>{table.shortcode}</div>
             </div>
-            <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-main)' }}>{table.name}</h3>
-            <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '12px' }}>
-              <Layout size={14} />
-              <span>Standard Seating</span>
+            
+            <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '4px' }}>
+              <button onClick={() => openEdit(table)} className="btn btn-outline" style={{ padding: '6px', border: 'none', background: 'transparent', color: 'var(--text-muted)', width: '30px', height: '30px' }}>
+                <Edit2 size={13} />
+              </button>
+              <button onClick={() => deleteTable(table.id)} className="btn btn-outline" style={{ padding: '6px', border: 'none', background: 'transparent', color: 'var(--danger)', width: '30px', height: '30px' }}>
+                <Trash2 size={13} />
+              </button>
             </div>
+
+            <div style={{ 
+              width: '56px', 
+              height: '56px', 
+              borderRadius: '16px', 
+              background: 'var(--primary-light)', 
+              color: 'var(--primary)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              margin: '12px auto 16px',
+              border: '1px solid rgba(0,102,255,0.1)'
+            }}>
+              <Layout size={28} />
+            </div>
+
+            <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>{table.name}</h3>
+            <p style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: '700', letterSpacing: '0.5px' }}>BILLING STATION</p>
           </div>
         ))}
       </div>
 
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+        <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" style={{ maxWidth: '420px', padding: '32px' }} onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-8">
-              <h2 style={{ fontSize: '20px', fontWeight: '800' }}>Add New Table</h2>
-              <X size={24} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={() => setShowModal(false)} />
+              <h2 style={{ fontSize: '20px', fontWeight: '800' }}>{editingId ? 'Edit Table' : 'Add New Table'}</h2>
+              <X size={24} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={closeModal} />
             </div>
             
             <form onSubmit={handleSubmit}>
@@ -109,7 +155,7 @@ const Tables = () => {
                 style={{ width: '100%', height: '56px', fontSize: '16px' }}
                 disabled={loading}
               >
-                {loading ? 'Creating...' : 'Create Table'}
+                {loading ? (editingId ? 'Updating...' : 'Creating...') : (editingId ? 'Update Table' : 'Create Table')}
               </button>
             </form>
           </div>

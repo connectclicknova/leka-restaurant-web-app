@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Plus, X, Tag } from 'lucide-react';
+import { Plus, X, Tag, Edit2, Trash2 } from 'lucide-react';
 import '../css/Categories.css';
 
 const EMOJI_LIST = [
@@ -14,6 +14,7 @@ const Categories = () => {
   const [categories, setCategories] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ name: '', emoji: '🍴' });
 
   useEffect(() => {
@@ -29,20 +30,46 @@ const Categories = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await addDoc(collection(db, 'restaurants', restaurant.id, 'categories'), {
+      const categoryData = {
         name: formData.name,
         emoji: formData.emoji,
         isActive: true,
-        order: categories.length + 1,
-        createdAt: new Date().toISOString()
-      });
-      setShowModal(false);
-      setFormData({ name: '', emoji: '🍴' });
+        updatedAt: new Date().toISOString()
+      };
+
+      if (editingId) {
+        await updateDoc(doc(db, 'restaurants', restaurant.id, 'categories', editingId), categoryData);
+      } else {
+        await addDoc(collection(db, 'restaurants', restaurant.id, 'categories'), {
+          ...categoryData,
+          order: categories.length + 1,
+          createdAt: new Date().toISOString()
+        });
+      }
+      closeModal();
     } catch (error) {
-      console.error("Error adding category", error);
+      console.error("Error saving category", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const deleteCategory = async (id) => {
+    if (window.confirm("Permanent delete this category? All items in this category will become uncategorized.")) {
+      await deleteDoc(doc(db, 'restaurants', restaurant.id, 'categories', id));
+    }
+  };
+
+  const openEdit = (cat) => {
+    setEditingId(cat.id);
+    setFormData({ name: cat.name, emoji: cat.emoji });
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingId(null);
+    setFormData({ name: '', emoji: '🍴' });
   };
 
   return (
@@ -57,31 +84,46 @@ const Categories = () => {
         </button>
       </div>
 
-      <div className="grid-items">
+      <div className="categories-grid">
         {categories.map(cat => (
-          <div key={cat.id} className="stat-card flex items-center justify-between" style={{ padding: '24px' }}>
-            <div className="flex items-center gap-4">
-              <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'var(--bg-app)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', border: '1px solid var(--border)' }}>
-                {cat.emoji || '🍴'}
-              </div>
-              <div>
-                <p style={{ fontWeight: '700', fontSize: '16px', color: 'var(--text-main)' }}>{cat.name}</p>
-                <span className="badge-status status-delivered" style={{ fontSize: '10px', marginTop: '6px' }}>ACTIVE</span>
-              </div>
+          <div key={cat.id} className="stat-card category-card" style={{ padding: '32px 24px', textAlign: 'center', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '4px' }}>
+              <button onClick={() => openEdit(cat)} className="btn btn-outline" style={{ padding: '6px', border: 'none', background: 'transparent', color: 'var(--text-muted)', width: '32px', height: '32px' }}>
+                <Edit2 size={14} />
+              </button>
+              <button onClick={() => deleteCategory(cat.id)} className="btn btn-outline" style={{ padding: '6px', border: 'none', background: 'transparent', color: 'var(--danger)', width: '32px', height: '32px' }}>
+                <Trash2 size={14} />
+              </button>
             </div>
-            <div style={{ color: 'var(--text-muted)', opacity: 0.3 }}>
-              <Tag size={20} />
+            
+            <div style={{ 
+              width: '72px', 
+              height: '72px', 
+              borderRadius: '20px', 
+              background: 'var(--bg-app)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              fontSize: '36px', 
+              border: '1px solid var(--border)',
+              margin: '0 auto 16px',
+              boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+            }}>
+              {cat.emoji || '🍴'}
             </div>
+            
+            <h3 style={{ fontWeight: '800', fontSize: '18px', color: 'var(--text-main)', marginBottom: '4px' }}>{cat.name}</h3>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '500' }}>MENU CATEGORY</p>
           </div>
         ))}
       </div>
 
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+        <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" style={{ maxWidth: '440px', padding: '32px' }} onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-8">
-              <h2 style={{ fontSize: '20px', fontWeight: '800' }}>New Category</h2>
-              <X size={24} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={() => setShowModal(false)} />
+              <h2 style={{ fontSize: '20px', fontWeight: '800' }}>{editingId ? 'Edit Category' : 'New Category'}</h2>
+              <X size={24} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={closeModal} />
             </div>
             
             <form onSubmit={handleSubmit}>
@@ -139,7 +181,7 @@ const Categories = () => {
                 style={{ width: '100%', height: '56px', fontSize: '16px' }}
                 disabled={loading}
               >
-                {loading ? 'Creating...' : 'Create Category'}
+                {loading ? (editingId ? 'Updating...' : 'Creating...') : (editingId ? 'Update Category' : 'Create Category')}
               </button>
             </form>
           </div>

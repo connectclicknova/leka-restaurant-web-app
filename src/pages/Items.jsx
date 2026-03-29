@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { collection, addDoc, onSnapshot, query, deleteDoc, doc, orderBy } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, deleteDoc, doc, orderBy, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { uploadImageToImageKit } from '../utils/imagekit';
-import { Plus, X, Search, Camera, Trash2, Check, Tag, Package } from 'lucide-react';
+import { Plus, X, Search, Camera, Trash2, Check, Tag, Package, Edit2 } from 'lucide-react';
 import '../css/Items.css';
 
 const Items = () => {
@@ -12,6 +12,7 @@ const Items = () => {
   const [categories, setCategories] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     shortcode: '',
@@ -43,33 +44,39 @@ const Items = () => {
     
     setLoading(true);
     try {
-      let imageUrl = '';
+      let imageUrl = editingId ? items.find(i => i.id === editingId)?.image || '' : '';
+      
       if (formData.image instanceof File) {
-        // Prepare file name
         const cleanFileName = formData.name.trim().replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
         const fileName = `${cleanFileName}_${Date.now()}`;
-        
-        // Manual upload with client-side signature
         const uploadResult = await uploadImageToImageKit(formData.image, fileName, 'RestaurantItems');
         imageUrl = uploadResult.url;
       }
 
-      await addDoc(collection(db, 'restaurants', restaurant.id, 'items'), {
+      const itemData = {
         name: formData.name,
         price: parseFloat(formData.price),
         shortcode: formData.shortcode || '',
         isVeg: formData.isVeg,
         categoryId: formData.categoryId,
-        image: imageUrl || '',
+        image: imageUrl,
         isAvailable: true,
-        createdAt: new Date().toISOString()
-      });
+        updatedAt: new Date().toISOString()
+      };
 
-      setShowModal(false);
-      setFormData({ name: '', shortcode: '', price: '', isVeg: true, categoryId: '', image: null });
+      if (editingId) {
+        await updateDoc(doc(db, 'restaurants', restaurant.id, 'items', editingId), itemData);
+      } else {
+        await addDoc(collection(db, 'restaurants', restaurant.id, 'items'), {
+          ...itemData,
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      closeModal();
     } catch (err) {
       console.error(err);
-      alert("Error saving item. Please ensure ImageKit credentials are correct in utils/imagekit.js");
+      alert("Error saving item.");
     } finally {
       setLoading(false);
     }
@@ -79,6 +86,25 @@ const Items = () => {
     if (window.confirm("Permanent delete this item?")) {
       await deleteDoc(doc(db, 'restaurants', restaurant.id, 'items', id));
     }
+  };
+
+  const openEdit = (item) => {
+    setEditingId(item.id);
+    setFormData({
+      name: item.name,
+      shortcode: item.shortcode,
+      price: item.price.toString(),
+      isVeg: item.isVeg,
+      categoryId: item.categoryId,
+      image: item.image // This will be used to show the preview
+    });
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingId(null);
+    setFormData({ name: '', shortcode: '', price: '', isVeg: true, categoryId: '', image: null });
   };
 
   return (
@@ -129,9 +155,14 @@ const Items = () => {
                   </span>
                 </td>
                 <td style={{ textAlign: 'right' }}>
-                  <button onClick={() => deleteItem(item.id)} className="btn btn-outline" style={{ padding: '8px', border: 'none', background: 'transparent', boxShadow: 'none', color: 'var(--text-muted)' }}>
-                    <Trash2 size={18} />
-                  </button>
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => openEdit(item)} className="btn btn-outline" style={{ padding: '8px', border: 'none', background: 'transparent', boxShadow: 'none', color: 'var(--text-muted)' }}>
+                      <Edit2 size={18} />
+                    </button>
+                    <button onClick={() => deleteItem(item.id)} className="btn btn-outline" style={{ padding: '8px', border: 'none', background: 'transparent', boxShadow: 'none', color: 'var(--danger)' }}>
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -146,11 +177,11 @@ const Items = () => {
       </div>
 
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+        <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" style={{ maxWidth: '520px', padding: '32px' }} onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-8">
-              <h2 style={{ fontSize: '20px', fontWeight: '800' }}>Add New Item</h2>
-              <X size={24} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={() => setShowModal(false)} />
+              <h2 style={{ fontSize: '20px', fontWeight: '800' }}>{editingId ? 'Edit Item' : 'Add New Item'}</h2>
+              <X size={24} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={closeModal} />
             </div>
             
             <form onSubmit={handleSubmit}>
@@ -176,7 +207,7 @@ const Items = () => {
                   onMouseOut={e => e.currentTarget.style.borderColor = 'var(--border)'}
                 >
                   {formData.image ? (
-                    <img src={URL.createObjectURL(formData.image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={formData.image instanceof File ? URL.createObjectURL(formData.image) : formData.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     <>
                       <Camera size={32} style={{ color: 'var(--text-muted)', marginBottom: '8px', opacity: 0.5 }} />
@@ -261,7 +292,7 @@ const Items = () => {
               </div>
 
               <button type="submit" className="btn btn-primary" style={{ width: '100%', height: '56px', fontSize: '16px' }} disabled={loading}>
-                {loading ? 'Adding Item...' : 'Add to Inventory'}
+                {loading ? (editingId ? 'Updating...' : 'Adding...') : (editingId ? 'Update Item' : 'Add to Inventory')}
               </button>
             </form>
           </div>
