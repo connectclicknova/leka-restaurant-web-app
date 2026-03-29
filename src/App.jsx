@@ -12,6 +12,7 @@ import Tables from './pages/Tables';
 import Reports from './pages/Reports';
 import Investments from './pages/Investments';
 import Staff from './pages/Staff';
+import AllBills from './pages/AllBills'; // Add this line
 import { 
   LayoutDashboard, 
   Receipt, 
@@ -22,7 +23,8 @@ import {
   Wallet, 
   Users, 
   LogOut,
-  ChevronRight
+  ChevronRight,
+  FileText // Add this line
 } from 'lucide-react';
 
 const ProtectedRoute = ({ children }) => {
@@ -51,6 +53,7 @@ const Sidebar = () => {
   const links = [
     { to: '/', name: 'Dashboard', icon: LayoutDashboard },
     { to: '/billing', name: 'Billing', icon: Receipt },
+    { to: '/all-bills', name: 'All Bills', icon: FileText }, // Add this line
     { to: '/items', name: 'Items', icon: Package },
     { to: '/categories', name: 'Categories', icon: Tag },
     { to: '/tables', name: 'Tables', icon: Layout },
@@ -133,6 +136,7 @@ function App() {
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
           <Route path="/billing" element={<ProtectedRoute><DashboardLayout><Billing /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/all-bills" element={<ProtectedRoute><DashboardLayout><AllBills /></DashboardLayout></ProtectedRoute>} />
           <Route path="/items" element={<ProtectedRoute><DashboardLayout><Items /></DashboardLayout></ProtectedRoute>} />
           <Route path="/categories" element={<ProtectedRoute><DashboardLayout><Categories /></DashboardLayout></ProtectedRoute>} />
           <Route path="/tables" element={<ProtectedRoute><DashboardLayout><Tables /></DashboardLayout></ProtectedRoute>} />

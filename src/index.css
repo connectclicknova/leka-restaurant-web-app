@@ -270,8 +270,26 @@ input:focus, select:focus {
 
 .grid-items {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1400px) {
+  .grid-items {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1100px) {
+  .grid-items {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .grid-items {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Badges */

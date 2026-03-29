@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { collection, addDoc, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, where, doc, updateDoc, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Search, Plus, Minus, CreditCard, ChevronDown, Trash2 } from 'lucide-react';
+import { Search, Plus, Minus, CreditCard, ChevronDown, Trash2, Printer, Save, FileText, CheckCircle } from 'lucide-react';
 
 const Billing = () => {
   const { restaurant, user } = useAuth();
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [tables, setTables] = useState([]);
-  const [cart, setCart] = useState([]);
+  const [activeBills, setActiveBills] = useState([]);
+  
   const [selectedTable, setSelectedTable] = useState('');
+  const [selectedBillId, setSelectedBillId] = useState(''); // '' means new bill
+  const [cart, setCart] = useState([]);
+  const [loading, setLoading] = useState(false);
+  
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
 
@@ -24,13 +29,49 @@ const Billing = () => {
     return () => { unsubItems(); unsubCats(); unsubTabs(); };
   }, [restaurant]);
 
+  // Load active bills for the selected table
+  useEffect(() => {
+    if (!restaurant?.id || !selectedTable) {
+      setActiveBills([]);
+      return;
+    }
+
+    const q = query(
+      collection(db, 'restaurants', restaurant.id, 'bills'),
+      where('tableNumber', '==', selectedTable),
+      where('status', '!=', 'paid')
+    );
+
+    const unsubBills = onSnapshot(q, (s) => {
+      const billsData = s.docs.map(d => ({ id: d.id, ...d.data() }));
+      setActiveBills(billsData);
+    });
+
+    return () => unsubBills();
+  }, [restaurant, selectedTable]);
+
+  // Handle bill selection
+  useEffect(() => {
+    if (selectedBillId) {
+      const bill = activeBills.find(b => b.id === selectedBillId);
+      if (bill) {
+        setCart(bill.items.map(item => ({
+          ...item,
+          id: item.itemId // Map itemId back to id for cart logic
+        })));
+      }
+    } else {
+      setCart([]);
+    }
+  }, [selectedBillId, activeBills]);
+
   const addToCart = (item) => {
     setCart(prev => {
       const existing = prev.find(i => i.id === item.id);
       if (existing) {
         return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
       }
-      return [...prev, { ...item, quantity: 1 }];
+      return [...prev, { ...item, quantity: 1, itemId: item.id }];
     });
   };
 
@@ -48,29 +89,87 @@ const Billing = () => {
   const tax = subtotal * 0.05; 
   const total = subtotal + tax;
 
-  const handleCheckout = async () => {
-    if (cart.length === 0) return alert("Select products first");
-    if (!selectedTable) return alert("Select a table number");
+  const saveBill = async (statusOverride = null) => {
+    if (!selectedTable) return alert("Select a table");
+    if (cart.length === 0) return alert("Cart is empty");
 
+    setLoading(true);
     try {
-      await addDoc(collection(db, 'restaurants', restaurant.id, 'bills'), {
-        billNumber: `POS-${Date.now().toString().slice(-6)}`,
-        createdAt: new Date().toISOString(),
-        createdBy: user.uid,
-        tableNumber: selectedTable,
-        status: 'paid',
+      const billData = {
         items: cart.map(i => ({ itemId: i.id, name: i.name, price: i.price, quantity: i.quantity })),
-        subtotal, taxAmount: tax, grandTotal: total,
-        paymentMethod: 'UPI/Other', paymentStatus: 'paid'
-      });
+        subtotal,
+        taxAmount: tax,
+        grandTotal: total,
+        tableNumber: selectedTable,
+        updatedAt: new Date().toISOString(),
+        status: statusOverride || (selectedBillId ? activeBills.find(b => b.id === selectedBillId).status : 'open')
+      };
 
-      alert("🎉 Order stored successfully!");
-      setCart([]);
-      setSelectedTable('');
+      if (selectedBillId) {
+        await updateDoc(doc(db, 'restaurants', restaurant.id, 'bills', selectedBillId), billData);
+        alert(`Bill updated as ${billData.status.toUpperCase()}`);
+      } else {
+        const docRef = await addDoc(collection(db, 'restaurants', restaurant.id, 'bills'), {
+          ...billData,
+          billNumber: `POS-${Date.now().toString().slice(-6)}`,
+          createdAt: new Date().toISOString(),
+          createdBy: user.uid,
+          status: statusOverride || 'open'
+        });
+        setSelectedBillId(docRef.id);
+        alert(`New bill created as ${statusOverride?.toUpperCase() || 'OPEN'}`);
+      }
     } catch (err) {
       console.error(err);
-      alert("Checkout error");
+      alert("Error saving bill");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handlePayment = async () => {
+    if (!selectedTable || cart.length === 0) return alert("Incomplete order");
+    if (!window.confirm("Mark this bill as PAID?")) return;
+
+    setLoading(true);
+    try {
+      const billData = {
+        items: cart.map(i => ({ itemId: i.id, name: i.name, price: i.price, quantity: i.quantity })),
+        subtotal,
+        taxAmount: tax,
+        grandTotal: total,
+        tableNumber: selectedTable,
+        status: 'paid',
+        paymentStatus: 'paid',
+        paymentMethod: 'Cash/Online',
+        paidAt: new Date().toISOString()
+      };
+
+      if (selectedBillId) {
+        await updateDoc(doc(db, 'restaurants', restaurant.id, 'bills', selectedBillId), billData);
+      } else {
+        await addDoc(collection(db, 'restaurants', restaurant.id, 'bills'), {
+          ...billData,
+          billNumber: `POS-${Date.now().toString().slice(-6)}`,
+          createdAt: new Date().toISOString(),
+          createdBy: user.uid
+        });
+      }
+
+      alert("🎉 Payment successful! Bill closed.");
+      setCart([]);
+      setSelectedTable('');
+      setSelectedBillId('');
+    } catch (err) {
+      console.error(err);
+      alert("Payment error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePrint = () => {
+    window.print(); // Basic print functionality
   };
 
   const filteredItems = items.filter(item => 
@@ -82,7 +181,7 @@ const Billing = () => {
     <div className="billing-grid">
       {/* Search and Product Selection */}
       <div className="flex-col" style={{ overflowY: 'auto', paddingRight: '8px' }}>
-        <div className="mb-6 flex gap-4">
+        <div className="mb-6 flex gap-4 no-print">
           <div style={{ flex: 1, position: 'relative' }}>
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#999' }} />
             <input 
@@ -93,7 +192,7 @@ const Billing = () => {
             />
           </div>
           <select 
-            style={{ width: '180px', marginBottom: '0', height: '42px', appearance: 'none', background: 'white url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22/%3E%3C/svg%3E") no-repeat right 12px top 50%', backgroundSize: '12px' }}
+            style={{ width: '180px', marginBottom: '0', height: '42px' }}
             value={activeCategory}
             onChange={e => setActiveCategory(e.target.value)}
           >
@@ -109,23 +208,23 @@ const Billing = () => {
               className="card" 
               style={{ padding: '0', overflow: 'hidden', cursor: 'pointer', transition: 'transform 0.1s' }}
               onClick={() => addToCart(item)}
-              onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
-              onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
             >
-              <div style={{ height: '140px', background: '#f6f6f7', position: 'relative' }}>
+              <div style={{ height: '120px', background: '#f6f6f7', position: 'relative' }}>
                 {item.image ? (
                   <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc' }}>
-                    <Plus size={32} strokeWidth={1} />
+                    <Plus size={24} strokeWidth={1} />
                   </div>
                 )}
-                {item.isVeg && <div style={{ position: 'absolute', top: '8px', right: '8px', width: '12px', height: '12px', border: '1px solid green', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'green' }}/></div>}
+                {item.isVeg && <div style={{ position: 'absolute', top: '8px', right: '8px', width: '10px', height: '10px', border: '1px solid green', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'green' }}/></div>}
               </div>
-              <div className="p-4">
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>{item.shortcode}</p>
-                <p style={{ fontWeight: '600', fontSize: '14px', marginBottom: '8px' }}>{item.name}</p>
-                <p style={{ color: 'var(--primary-color)', fontWeight: '700', fontSize: '15px' }}>${item.price.toFixed(2)}</p>
+              <div className="p-3">
+                <p style={{ fontWeight: '600', fontSize: '13px', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</p>
+                <div className="flex justify-between items-center">
+                   <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{item.shortcode || '-'}</p>
+                   <p style={{ color: 'var(--primary-color)', fontWeight: '700', fontSize: '14px' }}>${item.price.toFixed(2)}</p>
+                </div>
               </div>
             </div>
           ))}
@@ -134,73 +233,90 @@ const Billing = () => {
 
       {/* Cart/Summary Section */}
       <div className="card" style={{ padding: '0', display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <div className="card-header" style={{ margin: '0', borderTopLeftRadius: 'var(--radius)', borderTopRightRadius: 'var(--radius)', background: 'white' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '800', letterSpacing: '-0.5px' }}>CART SUMMARY</h2>
+        <div className="card-header" style={{ margin: '0', background: 'white' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '800' }}>BILLING TERMINAL</h2>
         </div>
         
-        <div className="p-4" style={{ background: '#fafafa', borderBottom: '1px solid var(--border-color)' }}>
-          <label style={{ fontSize: '11px', color: '#999' }}>SELECT TABLE</label>
-          <div style={{ position: 'relative' }}>
-            <select 
-              value={selectedTable} 
-              onChange={e => setSelectedTable(e.target.value)}
-              style={{ paddingLeft: '40px', marginBottom: '0' }}
-            >
-              <option value="">Choose a table...</option>
-              {tables.map(t => <option key={t.id} value={t.shortcode}>{t.name} ({t.shortcode})</option>)}
-            </select>
-            <CreditCard size={18} style={{ position: 'absolute', left: '12px', top: '10px', color: '#666' }} />
+        <div className="p-4 no-print" style={{ background: '#fafafa', borderBottom: '1px solid var(--border-color)' }}>
+          <div className="flex gap-2">
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: '11px', color: '#999' }}>TABLE</label>
+              <select 
+                value={selectedTable} 
+                onChange={e => { setSelectedTable(e.target.value); setSelectedBillId(''); }}
+                style={{ marginBottom: '8px', height: '38px' }}
+              >
+                <option value="">Select Table</option>
+                {tables.map(t => <option key={t.id} value={t.shortcode}>{t.name}</option>)}
+              </select>
+            </div>
+            <div style={{ flex: 1.5 }}>
+              <label style={{ fontSize: '11px', color: '#999' }}>ACTIVE BILLS</label>
+              <select 
+                value={selectedBillId} 
+                onChange={e => setSelectedBillId(e.target.value)}
+                style={{ marginBottom: '8px', height: '38px' }}
+                disabled={!selectedTable}
+              >
+                <option value="">+ New Bill</option>
+                {activeBills.map(b => (
+                   <option key={b.id} value={b.id}>{b.billNumber} (${b.grandTotal.toFixed(2)}) - {b.status}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
           {cart.length === 0 ? (
-            <div style={{ textAlign: 'center', marginTop: '60px', color: '#ccc' }}>
-              <Trash2 size={48} strokeWidth={1} style={{ marginBottom: '16px' }} />
-              <p style={{ fontSize: '13px' }}>Your cart is empty.</p>
+            <div style={{ textAlign: 'center', marginTop: '40px', color: '#ccc' }}>
+              <FileText size={40} strokeWidth={1} style={{ marginBottom: '12px' }} />
+              <p style={{ fontSize: '12px' }}>No items in selected bill</p>
             </div>
           ) : (
             cart.map(item => (
-              <div key={item.id} className="flex justify-between items-center mb-6">
+              <div key={item.id} className="flex justify-between items-center mb-4">
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: '14px', fontWeight: '600', marginBottom: '2px' }}>{item.name}</p>
-                  <p style={{ fontSize: '12px', color: '#666' }}>${item.price.toFixed(2)} / unit</p>
+                  <p style={{ fontSize: '13px', fontWeight: '600' }}>{item.name}</p>
+                  <p style={{ fontSize: '11px', color: '#666' }}>${item.price.toFixed(2)}</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center" style={{ border: '1px solid #ddd', borderRadius: '4px', background: 'white' }}>
-                    <button onClick={() => updateQuantity(item.id, -1)} style={{ padding: '4px', height: '30px', border: 'none', background: 'transparent', boxShadow: 'none' }}><Minus size={14}/></button>
-                    <span style={{ padding: '0 8px', fontSize: '13px', fontWeight: '700' }}>{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, 1)} style={{ padding: '4px', height: '30px', border: 'none', background: 'transparent', boxShadow: 'none' }}><Plus size={14}/></button>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center no-print" style={{ border: '1px solid #ddd', borderRadius: '4px' }}>
+                    <button onClick={() => updateQuantity(item.id, -1)} style={{ padding: '2px', height: '24px', border: 'none', background: 'transparent' }}><Minus size={12}/></button>
+                    <span style={{ padding: '0 6px', fontSize: '12px', fontWeight: '700' }}>{item.quantity}</span>
+                    <button onClick={() => updateQuantity(item.id, 1)} style={{ padding: '2px', height: '24px', border: 'none', background: 'transparent' }}><Plus size={12}/></button>
                   </div>
-                  <p style={{ width: '60px', textAlign: 'right', fontSize: '14px', fontWeight: '700' }}>${(item.price * item.quantity).toFixed(2)}</p>
+                  <p style={{ width: '50px', textAlign: 'right', fontSize: '13px', fontWeight: '700' }}>${(item.price * item.quantity).toFixed(2)}</p>
                 </div>
               </div>
             ))
           )}
         </div>
 
-        <div className="p-6" style={{ background: '#f6f6f7', borderTop: '1px solid var(--border-color)', borderBottomLeftRadius: 'var(--radius)', borderBottomRightRadius: 'var(--radius)' }}>
-          <div className="flex justify-between mb-3">
-            <span style={{ fontSize: '13px', color: '#666' }}>Subtotal</span>
-            <span style={{ fontSize: '14px', fontWeight: '600' }}>${subtotal.toFixed(2)}</span>
+        <div className="p-5" style={{ background: '#f6f6f7', borderTop: '1px solid var(--border-color)' }}>
+          <div className="flex justify-between mb-2">
+            <span style={{ fontSize: '12px', color: '#666' }}>Subtotal</span>
+            <span style={{ fontSize: '13px', fontWeight: '600' }}>${subtotal.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between mb-4">
-            <span style={{ fontSize: '13px', color: '#666' }}>Estimation Tax (5%)</span>
-            <span style={{ fontSize: '14px', fontWeight: '600' }}>${tax.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between items-center mb-6" style={{ borderTop: '1px dashed #ccc', paddingTop: '16px' }}>
-            <span style={{ fontSize: '15px', fontWeight: '800' }}>TOTAL AMOUNT</span>
-            <span style={{ fontSize: '24px', fontWeight: '900', color: 'var(--primary-color)' }}>${total.toFixed(2)}</span>
+          <div className="flex justify-between items-center mb-4" style={{ paddingTop: '8px', borderTop: '1px dashed #ccc' }}>
+            <span style={{ fontSize: '14px', fontWeight: '800' }}>TOTAL</span>
+            <span style={{ fontSize: '20px', fontWeight: '900', color: 'var(--primary-color)' }}>${total.toFixed(2)}</span>
           </div>
           
-          <button 
-            className="primary" 
-            style={{ width: '100%', height: '52px', fontSize: '16px', fontWeight: '700', letterSpacing: '0.5px' }}
-            disabled={cart.length === 0}
-            onClick={handleCheckout}
-          >
-            FINALIZE PAYMENT
-          </button>
+          <div className="grid no-print" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <button onClick={() => saveBill()} disabled={loading || !selectedTable} style={{ padding: '12px' }}>
+              <Save size={16} /> SAVE
+            </button>
+            <button onClick={() => saveBill('kot')} disabled={loading || !selectedTable} style={{ padding: '12px' }}>
+              <FileText size={16} /> KOT
+            </button>
+            <button onClick={handlePayment} className="primary" style={{ padding: '12px', gridColumn: 'span 2' }} disabled={loading || !selectedTable}>
+              <CheckCircle size={16} /> PAYMENT
+            </button>
+            <button onClick={handlePrint} style={{ padding: '12px', gridColumn: 'span 2' }}>
+              <Printer size={16} /> PRINT BILL
+            </button>
+          </div>
         </div>
       </div>
     </div>
