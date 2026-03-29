@@ -241,96 +241,106 @@ const Billing = () => {
             ))}
           </div>
         </div>
-
         {/* Cart Terminal */}
-        <div className="stat-card" style={{ padding: '0', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-          <div style={{ padding: '20px', borderBottom: '1px solid var(--border)', background: '#FCFCFD' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Terminal</h3>
-          </div>
-          
-          <div style={{ padding: '16px', background: '#F8F9FD', borderBottom: '1px solid var(--border)' }} className="no-print">
-            <div className="flex gap-2">
+        <div className="stat-card" style={{ padding: '0', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', borderLeft: '1px solid var(--border)' }}>
+          {/* Terminal Header */}
+          <div style={{ padding: '24px', background: 'white', borderBottom: '1px solid var(--border)' }}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 style={{ fontSize: '18px', fontWeight: '500', color: 'var(--text-main)' }}>Current Bill</h3>
+              <div style={{ padding: '6px 12px', background: 'var(--primary-light)', color: 'var(--primary)', borderRadius: '100px', fontSize: '12px', fontWeight: '500' }}>
+                {selectedBillId ? 'ACTIVE' : 'NEW ORDER'}
+              </div>
+            </div>
+
+            <div className="flex gap-3 no-print">
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: '10px', fontWeight: '500', color: 'var(--text-muted)' }}>TABLE</label>
                 <select 
                   className="search-input"
-                  style={{ marginBottom: '0', height: '42px', fontSize: '13px' }}
+                  style={{ height: '48px', fontSize: '13px', background: 'var(--bg-app)', border: 'none' }}
                   value={selectedTable} 
                   onChange={e => { setSelectedTable(e.target.value); setSelectedBillId(''); }}
                 >
-                  <option value="">Table</option>
+                  <option value="">Select Table</option>
                   {tables.map(t => <option key={t.id} value={t.shortcode}>{t.name}</option>)}
                 </select>
               </div>
-              <div style={{ flex: 1.5 }}>
-                <label style={{ fontSize: '10px', fontWeight: '500', color: 'var(--text-muted)' }}>ACTIVE BILL</label>
+              <div style={{ flex: 1.2 }}>
                 <select 
                   className="search-input"
-                  style={{ marginBottom: '0', height: '42px', fontSize: '13px' }}
+                  style={{ height: '48px', fontSize: '13px', background: 'var(--bg-app)', border: 'none' }}
                   disabled={!selectedTable}
                   value={selectedBillId} 
                   onChange={e => setSelectedBillId(e.target.value)}
                 >
                   <option value="">+ New Bill</option>
                   {activeBills.map(b => (
-                     <option key={b.id} value={b.id}>{b.billNumber} (₹{b.grandTotal.toFixed(2)})</option>
+                     <option key={b.id} value={b.id}>{b.billNumber} (₹{b.grandTotal.toFixed(0)})</option>
                   ))}
                 </select>
               </div>
             </div>
           </div>
-
-          <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+          
+          {/* Item List (Ticket Style) */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', background: '#FDFDFF' }}>
             {cart.length === 0 ? (
-              <div style={{ textAlign: 'center', marginTop: '60px', color: 'var(--text-muted)' }}>
-                <FileText size={48} strokeWidth={1} style={{ marginBottom: '16px', opacity: 0.3 }} />
-                <p style={{ fontSize: '14px' }}>Bill is empty</p>
+              <div style={{ textAlign: 'center', marginTop: '80px', color: 'var(--text-muted)' }}>
+                <div style={{ width: '64px', height: '64px', background: 'var(--bg-app)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                  <FileText size={28} strokeWidth={1.5} opacity={0.5} />
+                </div>
+                <p style={{ fontSize: '14px', fontWeight: '500' }}>Your order is empty</p>
+                <p style={{ fontSize: '12px', opacity: 0.6 }}>Add items from the menu</p>
               </div>
             ) : (
-              cart.map(item => (
-                <div key={item.id} className="flex justify-between items-start mb-8 pb-4" style={{ borderBottom: '1px dashed var(--border)' }}>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: '15px', fontWeight: '500', color: 'var(--text-main)', marginBottom: '4px' }}>{item.name}</p>
-                    <p style={{ fontSize: '13px', color: 'var(--primary)', fontWeight: '500' }}>₹{item.price.toFixed(2)}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-3">
-                    <div className="flex items-center no-print" style={{ background: 'var(--bg-app)', borderRadius: '10px', padding: '4px', border: '1px solid var(--border)' }}>
-                      <button className="btn" onClick={() => updateQuantity(item.id, -1)} style={{ padding: '4px', border: 'none', background: 'transparent', boxShadow: 'none' }}><Minus size={14}/></button>
-                      <span style={{ minWidth: '32px', textAlign: 'center', fontSize: '14px', fontWeight: '500' }}>{item.quantity}</span>
-                      <button className="btn" onClick={() => updateQuantity(item.id, 1)} style={{ padding: '4px', border: 'none', background: 'transparent', boxShadow: 'none' }}><Plus size={14}/></button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {cart.map(item => (
+                  <div key={item.id} className="flex justify-between items-start">
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-main)', marginBottom: '4px' }}>{item.name}</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>₹{item.price.toFixed(2)} × {item.quantity}</p>
                     </div>
-                    <p style={{ fontSize: '15px', fontWeight: '500', color: 'var(--text-main)' }}>₹{(item.price * item.quantity).toFixed(2)}</p>
+                    <div className="flex flex-col items-end gap-2">
+                       <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-main)', marginBottom: '2px' }}>₹{(item.price * item.quantity).toFixed(2)}</p>
+                       <div className="flex items-center no-print" style={{ background: 'white', borderRadius: '8px', border: '1px solid var(--border)', padding: '2px' }}>
+                        <button onClick={() => updateQuantity(item.id, -1)} style={{ background: 'transparent', border: 'none', padding: '4px', cursor: 'pointer', color: 'var(--text-muted)' }}><Minus size={12}/></button>
+                        <span style={{ fontSize: '12px', minWidth: '24px', textAlign: 'center', fontWeight: '500' }}>{item.quantity}</span>
+                        <button onClick={() => updateQuantity(item.id, 1)} style={{ background: 'transparent', border: 'none', padding: '4px', cursor: 'pointer', color: 'var(--primary)' }}><Plus size={12}/></button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
 
-          <div style={{ padding: '24px', background: '#FCFCFD', borderTop: '1px solid var(--border)' }}>
-            <div className="flex justify-between mb-2">
-              <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: '500' }}>Subtotal</span>
-              <span style={{ fontSize: '14px', fontWeight: '500' }}>₹{subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between mb-4">
-              <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: '500' }}>Tax (5%)</span>
-              <span style={{ fontSize: '14px', fontWeight: '700' }}>₹{tax.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between items-center mb-6" style={{ padding: '12px 0', borderTop: '2px dashed var(--border)' }}>
-              <span style={{ fontSize: '18px', fontWeight: '500' }}>TOTAL</span>
-              <span style={{ fontSize: '24px', fontWeight: '500', color: 'var(--primary)' }}>₹{total.toFixed(2)}</span>
+          {/* Terminal Footer (Payment Summary) */}
+          <div style={{ padding: '24px', background: 'white', borderTop: '1px solid var(--border)', boxShadow: '0 -10px 30px rgba(0,0,0,0.02)' }}>
+            <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div className="flex justify-between">
+                <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Subtotal</span>
+                <span style={{ fontSize: '13px', fontWeight: '500' }}>₹{subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>GST (5%)</span>
+                <span style={{ fontSize: '13px', fontWeight: '500' }}>₹{tax.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center mt-4 pt-4" style={{ borderTop: '1px dashed var(--border)' }}>
+                <span style={{ fontSize: '18px', fontWeight: '500', color: 'var(--text-main)' }}>Grand Total</span>
+                <span style={{ fontSize: '24px', fontWeight: '500', color: 'var(--primary)' }}>₹{total.toFixed(2)}</span>
+              </div>
             </div>
             
             <div className="no-print" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <button className="btn btn-outline" onClick={() => saveBill()} disabled={loading || !selectedTable} style={{ height: '52px', fontSize: '13px', fontWeight: '500' }}>
+              <button className="btn btn-outline" onClick={() => saveBill()} disabled={loading || !selectedTable} style={{ height: '52px', background: 'var(--bg-app)', border: 'none' }}>
                 <Save size={18} /> SAVE
               </button>
-              <button className="btn btn-outline" onClick={() => saveBill('kot')} disabled={loading || !selectedTable} style={{ height: '52px', fontSize: '13px', fontWeight: '500' }}>
+              <button className="btn btn-outline" onClick={() => saveBill('kot')} disabled={loading || !selectedTable} style={{ height: '52px', background: 'var(--bg-app)', border: 'none' }}>
                 <Printer size={18} /> KOT
               </button>
-              <button className="btn btn-primary" onClick={handlePayment} disabled={loading || !selectedTable} style={{ height: '52px', fontSize: '13px', fontWeight: '500' }}>
-                <CheckCircle size={18} /> PAYMENT
+              <button className="btn btn-primary" onClick={handlePayment} disabled={loading || !selectedTable} style={{ height: '52px', boxShadow: '0 8px 20px rgba(124, 58, 237, 0.2)' }}>
+                <CreditCard size={18} /> PAYMENT
               </button>
-              <button className="btn btn-outline" onClick={handlePrint} disabled={loading || !selectedTable} style={{ height: '52px', fontSize: '13px', fontWeight: '500' }}>
+              <button className="btn btn-outline" onClick={handlePrint} disabled={loading || !selectedTable} style={{ height: '52px', background: 'var(--bg-app)', border: 'none' }}>
                 <Printer size={18} /> PRINT
               </button>
             </div>
