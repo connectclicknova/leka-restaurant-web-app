@@ -1,192 +1,148 @@
-import { useState, useRef, useEffect } from 'react'
-import './App.css'
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Login from './pages/Login';
+import Onboarding from './pages/Onboarding';
+import SubscriptionGate from './pages/SubscriptionGate';
+import Dashboard from './pages/Dashboard';
+import Billing from './pages/Billing';
+import Items from './pages/Items';
+import Categories from './pages/Categories';
+import Tables from './pages/Tables';
+import Reports from './pages/Reports';
+import Investments from './pages/Investments';
+import Staff from './pages/Staff';
+import { 
+  LayoutDashboard, 
+  Receipt, 
+  Package, 
+  Tag, 
+  Layout, 
+  BarChart3, 
+  Wallet, 
+  Users, 
+  LogOut,
+  ChevronRight
+} from 'lucide-react';
 
-function App() {
-  const [device, setDevice] = useState(null)
-  const [characteristic, setCharacteristic] = useState(null)
-  const [logs, setLogs] = useState([])
-  const [isConnecting, setIsConnecting] = useState(false)
+const ProtectedRoute = ({ children }) => {
+  const { user, loading, restaurant, isSubscriptionActive } = useAuth();
   
-  const PRINTER_SERVICE_UUID = '000018f0-0000-1000-8000-00805f9b34fb' // Standard printer service
-  const PRINTER_CHARACTERISTIC_UUID = '00002af1-0000-1000-8000-00805f9b34fb' // Standard printer characteristic
-
-  const addLog = (message, type = '') => {
-    setLogs(prev => [...prev.slice(-10), { text: `[${new Date().toLocaleTimeString()}] ${message}`, type }])
-    console.log(`[Printer Debug] ${message}`)
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" />;
+  
+  // New User Onboarding Check
+  if (!restaurant?.onboardingComplete) {
+    return <Navigate to="/onboarding" />;
   }
 
-  const connectToPrinter = async () => {
-    try {
-      setIsConnecting(true)
-      addLog('Scanning for Bluetooth printers...')
-      
-      const bluetoothDevice = await navigator.bluetooth.requestDevice({
-        filters: [{
-          services: [PRINTER_SERVICE_UUID]
-        }],
-        optionalServices: [PRINTER_SERVICE_UUID]
-      })
-
-      addLog(`Found device: ${bluetoothDevice.name}`, 'success')
-      
-      bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected)
-
-      addLog('Connecting to GATT server...')
-      const server = await bluetoothDevice.gatt.connect()
-      
-      addLog('Getting Service...')
-      const service = await server.getPrimaryService(PRINTER_SERVICE_UUID)
-      
-      addLog('Getting Characteristic...')
-      const char = await service.getCharacteristic(PRINTER_CHARACTERISTIC_UUID)
-      
-      setDevice(bluetoothDevice)
-      setCharacteristic(char)
-      addLog('Printer Connected Successfully!', 'success')
-      
-    } catch (error) {
-      addLog(`Error: ${error.message}`, 'error')
-      // Fallback: If filtering by service fails, try searching everything
-      if (error.name === 'NotFoundError' || error.message.includes('No devices found')) {
-         addLog('Trying broad scan due to filter failure...')
-         tryScanningBroadly()
-      }
-    } finally {
-      setIsConnecting(false)
-    }
+  // Subscription Active Check
+  if (!isSubscriptionActive()) {
+    return <SubscriptionGate />;
   }
 
-  const tryScanningBroadly = async () => {
-    try {
-      setIsConnecting(true)
-      const bluetoothDevice = await navigator.bluetooth.requestDevice({
-        acceptAllDevices: true,
-        optionalServices: [PRINTER_SERVICE_UUID, '00001101-0000-1000-8000-00805f9b34fb']
-      })
-      addLog(`Found device: ${bluetoothDevice.name}`, 'success')
-      
-      const server = await bluetoothDevice.gatt.connect()
-      // Try to find the correct service
-      const services = await server.getPrimaryServices()
-      addLog(`Found ${services.length} services`)
-      
-      // Look for common printer/serial services
-      let targetService = null
-      for (const service of services) {
-        if (service.uuid === PRINTER_SERVICE_UUID || service.uuid.includes('18f0') || service.uuid.includes('1101')) {
-          targetService = service
-          break
-        }
-      }
+  return children;
+};
 
-      if (!targetService && services.length > 0) targetService = services[0]
+const Sidebar = () => {
+  const location = useLocation();
+  const { logout, user } = useAuth();
 
-      if (targetService) {
-        const characteristics = await targetService.getCharacteristics()
-        if (characteristics.length > 0) {
-          setDevice(bluetoothDevice)
-          setCharacteristic(characteristics[0])
-          addLog('Printer Connected via common profile', 'success')
-        }
-      }
-    } catch (error) {
-       addLog(`Broad scan error: ${error.message}`, 'error')
-    } finally {
-       setIsConnecting(false)
-    }
-  }
-
-  const onDisconnected = () => {
-    addLog('Device disconnected', 'error')
-    setDevice(null)
-    setCharacteristic(null)
-  }
-
-  const printSample = async () => {
-    if (!characteristic) {
-      addLog('No printer connected!', 'error')
-      return
-    }
-
-    try {
-      addLog('Printing sample...')
-      const encoder = new TextEncoder()
-      
-      // ESC/POS Commands
-      const reset = '\x1b\x40'
-      const center = '\x1b\x61\x01'
-      const left = '\x1b\x61\x00'
-      const boldOn = '\x1b\x45\x01'
-      const boldOff = '\x1b\x45\x00'
-      const lineFeed = '\x0a'
-      const cut = '\x1d\x56\x41'
-
-      const content = 
-        reset + center + boldOn + "LEKA RESTAURANT\n" + boldOff +
-        "------------------------------\n" +
-        left + "Sample Test Print\n" +
-        "Time: " + new Date().toLocaleTimeString() + "\n" +
-        "------------------------------\n" +
-        center + "Scan & Connect Works!\n\n" +
-        lineFeed + lineFeed + lineFeed + cut
-
-      const data = encoder.encode(content)
-      
-      // Write in chunks of 20 bytes (standard BLE limit) if needed, 
-      // but modern ones usually handle a bit more. We'll try direct first.
-      await characteristic.writeValue(data)
-      addLog('Print command sent!', 'success')
-    } catch (error) {
-      addLog(`Print Error: ${error.message}`, 'error')
-    }
-  }
+  const links = [
+    { to: '/', name: 'Dashboard', icon: LayoutDashboard },
+    { to: '/billing', name: 'Billing', icon: Receipt },
+    { to: '/items', name: 'Items', icon: Package },
+    { to: '/categories', name: 'Categories', icon: Tag },
+    { to: '/tables', name: 'Tables', icon: Layout },
+    { to: '/reports', name: 'Reports', icon: BarChart3 },
+    { to: '/investments', name: 'Investments', icon: Wallet },
+    { to: '/staff', name: 'Staff', icon: Users },
+  ];
 
   return (
-    <div className="app-container">
-      <div className="header">
-        <h1>Thermal Printer</h1>
-        <div className={`status-badge ${device ? 'status-connected' : 'status-disconnected'}`}>
-          <span className={`pulse ${device ? 'pulse-active' : ''}`}></span>
-          {device ? `Connected to ${device.name}` : 'Disconnected'}
-        </div>
-      </div>
-
-      <p>Manage your Bluetooth thermal printer connections and tests.</p>
-
-      <div className="button-group">
-        <button 
-          className="btn-primary" 
-          onClick={connectToPrinter} 
-          disabled={isConnecting}
-        >
-          {isConnecting ? 'Connecting...' : 'Connect Printer'}
-          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.14 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
-          </svg>
-        </button>
-        
-        <button 
-          className="btn-secondary" 
-          onClick={printSample}
-          disabled={!characteristic}
-        >
-          Print Sample
-          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-          </svg>
-        </button>
-      </div>
-
-      <div className="logs">
-        {logs.map((log, i) => (
-          <div key={i} className={`log-entry ${log.type}`}>
-            {log.text}
+    <aside className="sidebar">
+      <div className="sidebar-brand">
+        <h2 style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: '32px', height: '32px', background: 'var(--primary-color)', borderRadius: '6px', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '800' }}>
+            L
           </div>
-        ))}
-        {logs.length === 0 && <div className="log-entry">Waiting for activity...</div>}
+          <span style={{ fontWeight: '800', letterSpacing: '-0.5px' }}>LEKA</span>
+        </h2>
       </div>
+      
+      <div className="sidebar-nav">
+        {links.map((link) => (
+          <Link
+            key={link.to}
+            to={link.to}
+            className={`sidebar-link ${location.pathname === link.to ? 'active' : ''}`}
+          >
+            <link.icon size={20} strokeWidth={location.pathname === link.to ? 2.5 : 2} />
+            {link.name}
+            {location.pathname === link.to && <div style={{ marginLeft: 'auto' }}><ChevronRight size={14} /></div>}
+          </Link>
+        ))}
+      </div>
+
+      <div style={{ marginTop: 'auto', padding: '12px', borderTop: '1px solid var(--border-color)' }}>
+        <div className="flex items-center gap-3 p-2 mb-2">
+          {user?.photoURL ? (
+            <img src={user.photoURL} alt="User" style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
+          ) : (
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Users size={16}/></div>
+          )}
+          <div style={{ overflow: 'hidden' }}>
+            <p style={{ fontSize: '12px', fontWeight: '600', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.displayName}</p>
+            <p style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>Restaurant Admin</p>
+          </div>
+        </div>
+        <button onClick={logout} className="sidebar-link" style={{ width: '100%', border: 'none', background: 'transparent' }}>
+          <LogOut size={18} />
+          Sign Out
+        </button>
+      </div>
+    </aside>
+  );
+};
+
+const DashboardLayout = ({ children }) => {
+  const { restaurant } = useAuth();
+  return (
+    <div className="app-wrapper">
+      <Sidebar />
+      <main style={{ flex: 1, height: '100vh', overflowY: 'auto' }}>
+        <header style={{ height: '56px', background: 'white', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', padding: '0 24px', position: 'sticky', top: 0, zIndex: 10 }}>
+          <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+            Restaurant: <span style={{ color: 'var(--text-primary)' }}>{restaurant?.name || 'Default Restaurant'}</span>
+          </p>
+        </header>
+        <div className="p-6">
+          {children}
+        </div>
+      </main>
     </div>
-  )
+  );
+};
+
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/billing" element={<ProtectedRoute><DashboardLayout><Billing /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/items" element={<ProtectedRoute><DashboardLayout><Items /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/categories" element={<ProtectedRoute><DashboardLayout><Categories /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/tables" element={<ProtectedRoute><DashboardLayout><Tables /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/reports" element={<ProtectedRoute><DashboardLayout><Reports /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/investments" element={<ProtectedRoute><DashboardLayout><Investments /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/staff" element={<ProtectedRoute><DashboardLayout><Staff /></DashboardLayout></ProtectedRoute>} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
 }
 
-export default App
+export default App;
