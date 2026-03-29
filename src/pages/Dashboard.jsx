@@ -55,7 +55,7 @@ const Dashboard = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: '24px' }}>
         <div className="stat-card" style={{ height: '300px', display: 'flex', flexDirection: 'column' }}>
           <div className="flex justify-between items-center mb-6">
-            <h3 style={{ fontSize: '16px', fontWeight: '700' }}>Sales Analytics</h3>
+            <h3 style={{ fontSize: '16px', fontWeight: '500' }}>Sales Analytics</h3>
             <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '12px' }}>Monthly</button>
           </div>
           <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '12px', paddingBottom: '10px' }}>
@@ -69,7 +69,7 @@ const Dashboard = () => {
         </div>
 
         <div className="stat-card" style={{ height: '300px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px' }}>Top Items</h3>
+          <h3 style={{ fontSize: '16px', fontWeight: '500', marginBottom: '20px' }}>Top Items</h3>
           <div className="flex-col gap-4">
             {[
               { name: 'Chicken Biryani', sales: '240 orders' },
@@ -78,7 +78,7 @@ const Dashboard = () => {
             ].map((item, i) => (
               <div key={i} className="flex justify-between items-center p-3" style={{ background: 'var(--bg-app)', borderRadius: '10px' }}>
                 <div>
-                  <p style={{ fontSize: '13px', fontWeight: '600' }}>{item.name}</p>
+                  <p style={{ fontSize: '13px', fontWeight: '500' }}>{item.name}</p>
                   <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.sales}</p>
                 </div>
                 <MoreHorizontal size={16} color="var(--text-muted)" />
@@ -90,7 +90,7 @@ const Dashboard = () => {
 
       <div className="table-container">
         <div style={{ padding: '20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '700' }}>Recent Orders</h3>
+          <h3 style={{ fontSize: '16px', fontWeight: '500' }}>Recent Orders</h3>
           <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '12px' }}>View All</button>
         </div>
         <table className="table">

@@ -140,7 +140,7 @@ const Items = () => {
                     {item.image ? <img src={item.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#CBD5E0' }}><Camera size={18}/></div>}
                   </div>
                 </td>
-                <td style={{ fontWeight: '700', color: 'var(--text-main)' }}>{item.name}</td>
+                <td style={{ fontWeight: '500', color: 'var(--text-main)' }}>{item.name}</td>
                 <td>
                   <div className="flex items-center gap-2" style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
                     <Tag size={13} />
@@ -148,7 +148,7 @@ const Items = () => {
                   </div>
                 </td>
                 <td><code style={{ background: 'var(--bg-app)', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>{item.shortcode || '-'}</code></td>
-                <td style={{ fontWeight: '800', color: 'var(--primary)' }}>₹{item.price.toFixed(2)}</td>
+                <td style={{ fontWeight: '500', color: 'var(--primary)' }}>₹{item.price.toFixed(2)}</td>
                 <td>
                   <span className={`badge-status ${item.isVeg ? 'status-delivered' : 'status-pending'}`} style={{ fontSize: '10px' }}>
                     {item.isVeg ? 'VEGETARIAN' : 'NON-VEGETARIAN'}
@@ -180,13 +180,13 @@ const Items = () => {
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" style={{ maxWidth: '520px', padding: '32px' }} onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-8">
-              <h2 style={{ fontSize: '20px', fontWeight: '800' }}>{editingId ? 'Edit Item' : 'Add New Item'}</h2>
+              <h2 style={{ fontSize: '20px', fontWeight: '500' }}>{editingId ? 'Edit Item' : 'Add New Item'}</h2>
               <X size={24} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={closeModal} />
             </div>
             
             <form onSubmit={handleSubmit}>
               <div className="mb-6">
-                <label style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '8px' }}>Display Image</label>
+                <label style={{ fontSize: '11px', fontWeight: '500', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '8px' }}>Display Image</label>
                 <div 
                   onClick={() => document.getElementById('item-image').click()}
                   style={{ 
@@ -220,18 +220,18 @@ const Items = () => {
 
               <div className="flex gap-4 mb-4">
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)' }}>ITEM NAME</label>
+                  <label style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-muted)' }}>ITEM NAME</label>
                   <input className="search-input" required placeholder="e.g. Butter Chicken" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} style={{ marginBottom: 0 }} />
                 </div>
                 <div style={{ width: '140px' }}>
-                  <label style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)' }}>PRICE (₹)</label>
+                  <label style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-muted)' }}>PRICE (₹)</label>
                   <input className="search-input" type="number" step="0.01" required placeholder="0.00" value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} style={{ marginBottom: 0 }} />
                 </div>
               </div>
 
               <div className="flex gap-4 mb-6">
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)' }}>CATEGORY</label>
+                  <label style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-muted)' }}>CATEGORY</label>
                   <select 
                     className="search-input"
                     required 
@@ -246,13 +246,13 @@ const Items = () => {
                   </select>
                 </div>
                 <div style={{ width: '140px' }}>
-                  <label style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)' }}>SHORT CODE</label>
+                  <label style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-muted)' }}>SHORT CODE</label>
                   <input className="search-input" placeholder="e.g. BC-01" value={formData.shortcode} onChange={e => setFormData({ ...formData, shortcode: e.target.value })} style={{ marginBottom: 0 }} />
                 </div>
               </div>
 
               <div style={{ marginBottom: '32px' }}>
-                <label style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '12px' }}>DIETARY REQUIREMENT</label>
+                <label style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '12px' }}>DIETARY REQUIREMENT</label>
                 <div className="flex gap-3">
                   <button 
                     type="button" 
@@ -265,7 +265,7 @@ const Items = () => {
                       background: formData.isVeg ? '#E6F9EC' : 'white',
                       color: formData.isVeg ? '#00C853' : 'var(--text-muted)',
                       border: formData.isVeg ? '1px solid #00C853' : '1px solid var(--border)',
-                      fontWeight: '700',
+                      fontWeight: '500',
                       boxShadow: 'none'
                     }}
                   >
@@ -282,7 +282,7 @@ const Items = () => {
                       background: !formData.isVeg ? '#FFE6E6' : 'white',
                       color: !formData.isVeg ? '#FF5252' : 'var(--text-muted)',
                       border: !formData.isVeg ? '1px solid #FF5252' : '1px solid var(--border)',
-                      fontWeight: '700',
+                      fontWeight: '500',
                       boxShadow: 'none'
                     }}
                   >

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { collection, addDoc, onSnapshot, query, where, doc, updateDoc, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Search, Plus, Minus, CreditCard, ChevronDown, Trash2, Printer, Save, FileText, CheckCircle } from 'lucide-react';
+import { Search, Plus, Minus, CreditCard, ChevronDown, Trash2, Printer, Save, FileText, CheckCircle, Package } from 'lucide-react';
 import '../css/Billing.css';
 
 const Billing = () => {
@@ -231,10 +231,10 @@ const Billing = () => {
                   )}
                 </div>
                 <div style={{ padding: '16px' }}>
-                  <p style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-main)', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</p>
+                  <p style={{ fontWeight: '500', fontSize: '15px', color: 'var(--text-main)', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</p>
                   <div className="flex justify-between items-center">
                      <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{item.shortcode || '-'}</p>
-                     <p style={{ color: 'var(--primary)', fontWeight: '800', fontSize: '16px' }}>₹{item.price.toFixed(2)}</p>
+                     <p style={{ color: 'var(--primary)', fontWeight: '500', fontSize: '16px' }}>₹{item.price.toFixed(2)}</p>
                   </div>
                 </div>
               </div>
@@ -245,13 +245,13 @@ const Billing = () => {
         {/* Cart Terminal */}
         <div className="stat-card" style={{ padding: '0', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
           <div style={{ padding: '20px', borderBottom: '1px solid var(--border)', background: '#FCFCFD' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Terminal</h3>
+            <h3 style={{ fontSize: '16px', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Terminal</h3>
           </div>
           
           <div style={{ padding: '16px', background: '#F8F9FD', borderBottom: '1px solid var(--border)' }} className="no-print">
             <div className="flex gap-2">
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-muted)' }}>TABLE</label>
+                <label style={{ fontSize: '10px', fontWeight: '500', color: 'var(--text-muted)' }}>TABLE</label>
                 <select 
                   className="search-input"
                   style={{ marginBottom: '0', height: '42px', fontSize: '13px' }}
@@ -263,7 +263,7 @@ const Billing = () => {
                 </select>
               </div>
               <div style={{ flex: 1.5 }}>
-                <label style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-muted)' }}>ACTIVE BILL</label>
+                <label style={{ fontSize: '10px', fontWeight: '500', color: 'var(--text-muted)' }}>ACTIVE BILL</label>
                 <select 
                   className="search-input"
                   style={{ marginBottom: '0', height: '42px', fontSize: '13px' }}
@@ -290,16 +290,16 @@ const Billing = () => {
               cart.map(item => (
                 <div key={item.id} className="flex justify-between items-start mb-8 pb-4" style={{ borderBottom: '1px dashed var(--border)' }}>
                   <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-main)', marginBottom: '4px' }}>{item.name}</p>
-                    <p style={{ fontSize: '13px', color: 'var(--primary)', fontWeight: '700' }}>₹{item.price.toFixed(2)}</p>
+                    <p style={{ fontSize: '15px', fontWeight: '500', color: 'var(--text-main)', marginBottom: '4px' }}>{item.name}</p>
+                    <p style={{ fontSize: '13px', color: 'var(--primary)', fontWeight: '500' }}>₹{item.price.toFixed(2)}</p>
                   </div>
                   <div className="flex flex-col items-end gap-3">
                     <div className="flex items-center no-print" style={{ background: 'var(--bg-app)', borderRadius: '10px', padding: '4px', border: '1px solid var(--border)' }}>
                       <button className="btn" onClick={() => updateQuantity(item.id, -1)} style={{ padding: '4px', border: 'none', background: 'transparent', boxShadow: 'none' }}><Minus size={14}/></button>
-                      <span style={{ minWidth: '32px', textAlign: 'center', fontSize: '14px', fontWeight: '800' }}>{item.quantity}</span>
+                      <span style={{ minWidth: '32px', textAlign: 'center', fontSize: '14px', fontWeight: '500' }}>{item.quantity}</span>
                       <button className="btn" onClick={() => updateQuantity(item.id, 1)} style={{ padding: '4px', border: 'none', background: 'transparent', boxShadow: 'none' }}><Plus size={14}/></button>
                     </div>
-                    <p style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-main)' }}>₹{(item.price * item.quantity).toFixed(2)}</p>
+                    <p style={{ fontSize: '15px', fontWeight: '500', color: 'var(--text-main)' }}>₹{(item.price * item.quantity).toFixed(2)}</p>
                   </div>
                 </div>
               ))
@@ -308,29 +308,29 @@ const Billing = () => {
 
           <div style={{ padding: '24px', background: '#FCFCFD', borderTop: '1px solid var(--border)' }}>
             <div className="flex justify-between mb-2">
-              <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: '600' }}>Subtotal</span>
-              <span style={{ fontSize: '14px', fontWeight: '700' }}>₹{subtotal.toFixed(2)}</span>
+              <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: '500' }}>Subtotal</span>
+              <span style={{ fontSize: '14px', fontWeight: '500' }}>₹{subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between mb-4">
-              <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: '600' }}>Tax (5%)</span>
+              <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: '500' }}>Tax (5%)</span>
               <span style={{ fontSize: '14px', fontWeight: '700' }}>₹{tax.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center mb-6" style={{ padding: '12px 0', borderTop: '2px dashed var(--border)' }}>
-              <span style={{ fontSize: '18px', fontWeight: '900' }}>TOTAL</span>
-              <span style={{ fontSize: '24px', fontWeight: '900', color: 'var(--primary)' }}>₹{total.toFixed(2)}</span>
+              <span style={{ fontSize: '18px', fontWeight: '500' }}>TOTAL</span>
+              <span style={{ fontSize: '24px', fontWeight: '500', color: 'var(--primary)' }}>₹{total.toFixed(2)}</span>
             </div>
             
             <div className="no-print" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <button className="btn btn-outline" onClick={() => saveBill()} disabled={loading || !selectedTable} style={{ height: '52px', fontSize: '13px', fontWeight: '800' }}>
+              <button className="btn btn-outline" onClick={() => saveBill()} disabled={loading || !selectedTable} style={{ height: '52px', fontSize: '13px', fontWeight: '500' }}>
                 <Save size={18} /> SAVE
               </button>
-              <button className="btn btn-outline" onClick={() => saveBill('kot')} disabled={loading || !selectedTable} style={{ height: '52px', fontSize: '13px', fontWeight: '800' }}>
+              <button className="btn btn-outline" onClick={() => saveBill('kot')} disabled={loading || !selectedTable} style={{ height: '52px', fontSize: '13px', fontWeight: '500' }}>
                 <Printer size={18} /> KOT
               </button>
-              <button className="btn btn-primary" onClick={handlePayment} disabled={loading || !selectedTable} style={{ height: '52px', fontSize: '13px', fontWeight: '800' }}>
+              <button className="btn btn-primary" onClick={handlePayment} disabled={loading || !selectedTable} style={{ height: '52px', fontSize: '13px', fontWeight: '500' }}>
                 <CheckCircle size={18} /> PAYMENT
               </button>
-              <button className="btn btn-outline" onClick={handlePrint} disabled={loading || !selectedTable} style={{ height: '52px', fontSize: '13px', fontWeight: '800' }}>
+              <button className="btn btn-outline" onClick={handlePrint} disabled={loading || !selectedTable} style={{ height: '52px', fontSize: '13px', fontWeight: '500' }}>
                 <Printer size={18} /> PRINT
               </button>
             </div>

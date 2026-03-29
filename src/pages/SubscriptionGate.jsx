@@ -43,7 +43,7 @@ const SubscriptionGate = () => {
         
         <h1 style={{ 
           fontSize: '24px', 
-          fontWeight: '900', 
+          fontWeight: '500', 
           color: 'var(--text-main)', 
           marginBottom: '12px',
           letterSpacing: '-0.5px'
@@ -67,13 +67,13 @@ const SubscriptionGate = () => {
           border: '1px solid var(--border)',
           textAlign: 'left'
         }}>
-          <p style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Support Assistant</p>
+          <p style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Support Assistant</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <a href={`tel:${contactPhone}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-main)', textDecoration: 'none', fontSize: '14px', fontWeight: '700' }}>
+            <a href={`tel:${contactPhone}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-main)', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>
               <div style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center' }}><Phone size={18} /></div>
               {contactPhone}
             </a>
-            <a href={`mailto:${contactEmail}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-main)', textDecoration: 'none', fontSize: '14px', fontWeight: '700' }}>
+            <a href={`mailto:${contactEmail}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-main)', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>
               <div style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center' }}><Mail size={18} /></div>
               {contactEmail}
             </a>
@@ -84,7 +84,7 @@ const SubscriptionGate = () => {
           <button 
             className="btn btn-primary"
             onClick={() => window.open('https://leka.com/pricing', '_blank')}
-            style={{ flex: 1.5, height: '56px', fontSize: '14px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ flex: 1.5, height: '56px', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             Upgrade <ArrowRight size={18} style={{ marginLeft: '8px' }} />
           </button>
@@ -92,7 +92,7 @@ const SubscriptionGate = () => {
           <button 
             onClick={logout} 
             className="btn btn-outline"
-            style={{ flex: 1, height: '56px', fontSize: '14px', border: '1px solid var(--border)', color: 'var(--text-muted)', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ flex: 1, height: '56px', fontSize: '14px', border: '1px solid var(--border)', color: 'var(--text-muted)', fontWeight: '500', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             <LogOut size={18} style={{ marginRight: '8px' }} /> Sign Out
           </button>
