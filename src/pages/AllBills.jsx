@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { collection, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Search, Eye, Trash2, Calendar, Clock, DollarSign, Filter, CreditCard } from 'lucide-react';
+import { Search, Printer, Calendar, Clock, DollarSign, Filter, CreditCard } from 'lucide-react';
 import '../css/AllBills.css';
 
 const AllBills = () => {
@@ -28,12 +28,6 @@ const AllBills = () => {
     return () => unsub();
   }, [restaurant]);
 
-  const deleteBill = async (id) => {
-    if (window.confirm("Confirm delete this bill records?")) {
-      await deleteDoc(doc(db, 'restaurants', restaurant.id, 'bills', id));
-    }
-  };
-
   const filteredBills = bills.filter(bill => {
     const matchesSearch = 
       bill.billNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -41,6 +35,12 @@ const AllBills = () => {
     const matchesStatus = statusFilter === 'all' || bill.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const handlePrintReceipt = (bill) => {
+    // For now, basic print functionality
+    // In a real scenario, you'd show a hidden receipt template first
+    window.print();
+  };
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -99,7 +99,7 @@ const AllBills = () => {
               <th>Items</th>
               <th>Amount</th>
               <th>Status</th>
-              <th style={{ textAlign: 'right' }}>Actions</th>
+              <th style={{ textAlign: 'right' }} className="no-print">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -124,9 +124,9 @@ const AllBills = () => {
                 </td>
                 <td style={{ fontWeight: '800', color: 'var(--text-main)', fontSize: '15px' }}>₹{bill.grandTotal.toFixed(2)}</td>
                 <td>{getStatusBadge(bill.status)}</td>
-                <td style={{ textAlign: 'right' }}>
-                  <button onClick={() => deleteBill(bill.id)} className="btn" style={{ padding: '6px', color: 'var(--danger)', border: 'none', background: 'transparent', boxShadow: 'none' }}>
-                    <Trash2 size={18} />
+                <td style={{ textAlign: 'right' }} className="no-print">
+                  <button onClick={() => handlePrintReceipt(bill)} className="btn btn-outline" style={{ padding: '8px', color: 'var(--primary)', border: 'none', background: 'transparent', boxShadow: 'none' }}>
+                    <Printer size={18} />
                   </button>
                 </td>
               </tr>
@@ -134,7 +134,7 @@ const AllBills = () => {
           </tbody>
         </table>
         {filteredBills.length === 0 && (
-          <div className="p-12 text-center">
+          <div className="p-12 text-center no-print">
             <Search size={48} style={{ margin: '0 auto 16px', opacity: 0.1 }} />
             <p style={{ color: 'var(--text-muted)' }}>No bill records found matching your filters.</p>
           </div>
