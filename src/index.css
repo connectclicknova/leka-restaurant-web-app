@@ -1,15 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap');
 
 :root {
-  --primary: #0066FF;
-  --primary-light: #F0F7FF;
+  --primary: #7C3AED;
+  --primary-light: #F5F3FF;
   --bg-app: #F8F9FD;
   --bg-card: #FFFFFF;
   --text-main: #1C1C1C;
   --text-muted: #8E92BC;
   --border: #F1F4F9;
   --radius: 12px;
-  --font-base: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-base: "Sora", sans-serif;
   --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   --success: #00C853;
   --warning: #FFAB00;
@@ -20,6 +20,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  font-family: var(--font-base);
 }
 
 body {
@@ -294,8 +295,13 @@ select.search-input {
   font-weight: 600;
 }
 
-.trend-up { color: var(--success); }
-.trend-down { color: var(--danger); }
+.trend-up {
+  color: var(--success);
+}
+
+.trend-down {
+  color: var(--danger);
+}
 
 .stat-value {
   font-size: 28px;
@@ -374,13 +380,35 @@ select.search-input {
 }
 
 /* Utility classes to keep current code working */
-.flex { display: flex; align-items: center; }
-.flex-col { display: flex; flex-direction: column; }
-.justify-between { justify-content: space-between; }
-.gap-2 { gap: 8px; }
-.gap-4 { gap: 16px; }
-.p-6 { padding: 32px; }
-.items-center { align-items: center; }
+.flex {
+  display: flex;
+  align-items: center;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-2 {
+  gap: 8px;
+}
+
+.gap-4 {
+  gap: 16px;
+}
+
+.p-6 {
+  padding: 32px;
+}
+
+.items-center {
+  align-items: center;
+}
 
 /* Keep existing table styles but update colors */
 .table-container {
@@ -394,7 +422,8 @@ select.search-input {
 
 .table {
   width: 100%;
-  min-width: 800px; /* Ensure table content doesn't squeeze too much */
+  min-width: 800px;
+  /* Ensure table content doesn't squeeze too much */
   border-collapse: collapse;
 }
 
@@ -433,6 +462,17 @@ select.search-input {
   font-weight: 600;
 }
 
-.status-on-progress { background: #FFF9E6; color: #FFA000; }
-.status-pending { background: #FFE6E6; color: #FF5252; }
-.status-delivered { background: #E6F9EC; color: #00C853; }
+.status-on-progress {
+  background: #FFF9E6;
+  color: #FFA000;
+}
+
+.status-pending {
+  background: #FFE6E6;
+  color: #FF5252;
+}
+
+.status-delivered {
+  background: #E6F9EC;
+  color: #00C853;
+}
