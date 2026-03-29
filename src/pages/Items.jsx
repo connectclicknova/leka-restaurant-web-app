@@ -121,7 +121,7 @@ const Items = () => {
                   </div>
                 </td>
                 <td style={{ fontSize: '12px', color: '#666' }}>{item.shortcode || '-'}</td>
-                <td style={{ fontWeight: '700' }}>${item.price.toFixed(2)}</td>
+                <td style={{ fontWeight: '700' }}>₹{item.price.toFixed(2)}</td>
                 <td>
                   <span className={`badge ${item.isVeg ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '10px' }}>
                     {item.isVeg ? 'VEG' : 'NON-VEG'}

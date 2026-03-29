@@ -117,7 +117,7 @@ const AllBills = () => {
                    </div>
                 </td>
                 <td>{bill.items?.length || 0} items ({bill.items?.reduce((a,c) => a+c.quantity, 0) || 0} qty)</td>
-                <td style={{ fontWeight: '700' }}>${bill.grandTotal.toFixed(2)}</td>
+                <td style={{ fontWeight: '700' }}>₹{bill.grandTotal.toFixed(2)}</td>
                 <td>{getStatusBadge(bill.status)}</td>
                 <td style={{ textAlign: 'right' }}>
                   <button onClick={() => deleteBill(bill.id)} style={{ padding: '6px', color: '#ff4d4f', border: 'none', background: 'transparent' }}>

@@ -201,7 +201,7 @@ const Billing = () => {
           </select>
         </div>
 
-        <div className="grid-items">
+        <div className="grid-items" style={{ padding: '4px' }}>
           {filteredItems.map(item => (
             <div 
               key={item.id} 
@@ -223,7 +223,7 @@ const Billing = () => {
                 <p style={{ fontWeight: '600', fontSize: '13px', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</p>
                 <div className="flex justify-between items-center">
                    <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{item.shortcode || '-'}</p>
-                   <p style={{ color: 'var(--primary-color)', fontWeight: '700', fontSize: '14px' }}>${item.price.toFixed(2)}</p>
+                   <p style={{ color: 'var(--primary-color)', fontWeight: '700', fontSize: '14px' }}>₹{item.price.toFixed(2)}</p>
                 </div>
               </div>
             </div>
@@ -260,7 +260,7 @@ const Billing = () => {
               >
                 <option value="">+ New Bill</option>
                 {activeBills.map(b => (
-                   <option key={b.id} value={b.id}>{b.billNumber} (${b.grandTotal.toFixed(2)}) - {b.status}</option>
+                   <option key={b.id} value={b.id}>{b.billNumber} (₹{b.grandTotal.toFixed(2)}) - {b.status}</option>
                 ))}
               </select>
             </div>
@@ -275,10 +275,10 @@ const Billing = () => {
             </div>
           ) : (
             cart.map(item => (
-              <div key={item.id} className="flex justify-between items-center mb-4">
+              <div key={item.id} className="flex justify-between items-center mb-6 px-1">
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: '13px', fontWeight: '600' }}>{item.name}</p>
-                  <p style={{ fontSize: '11px', color: '#666' }}>${item.price.toFixed(2)}</p>
+                  <p style={{ fontSize: '11px', color: '#666' }}>₹{item.price.toFixed(2)}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center no-print" style={{ border: '1px solid #ddd', borderRadius: '4px' }}>
@@ -286,7 +286,7 @@ const Billing = () => {
                     <span style={{ padding: '0 6px', fontSize: '12px', fontWeight: '700' }}>{item.quantity}</span>
                     <button onClick={() => updateQuantity(item.id, 1)} style={{ padding: '2px', height: '24px', border: 'none', background: 'transparent' }}><Plus size={12}/></button>
                   </div>
-                  <p style={{ width: '50px', textAlign: 'right', fontSize: '13px', fontWeight: '700' }}>${(item.price * item.quantity).toFixed(2)}</p>
+                  <p style={{ width: '50px', textAlign: 'right', fontSize: '13px', fontWeight: '700' }}>₹{(item.price * item.quantity).toFixed(2)}</p>
                 </div>
               </div>
             ))
@@ -296,11 +296,11 @@ const Billing = () => {
         <div className="p-5" style={{ background: '#f6f6f7', borderTop: '1px solid var(--border-color)' }}>
           <div className="flex justify-between mb-2">
             <span style={{ fontSize: '12px', color: '#666' }}>Subtotal</span>
-            <span style={{ fontSize: '13px', fontWeight: '600' }}>${subtotal.toFixed(2)}</span>
+            <span style={{ fontSize: '13px', fontWeight: '600' }}>₹{subtotal.toFixed(2)}</span>
           </div>
           <div className="flex justify-between items-center mb-4" style={{ paddingTop: '8px', borderTop: '1px dashed #ccc' }}>
             <span style={{ fontSize: '14px', fontWeight: '800' }}>TOTAL</span>
-            <span style={{ fontSize: '20px', fontWeight: '900', color: 'var(--primary-color)' }}>${total.toFixed(2)}</span>
+            <span style={{ fontSize: '20px', fontWeight: '900', color: 'var(--primary-color)' }}>₹{total.toFixed(2)}</span>
           </div>
           
           <div className="grid no-print" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
