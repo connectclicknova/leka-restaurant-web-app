@@ -304,17 +304,17 @@ const Billing = () => {
           </div>
           
           <div className="grid no-print" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <button onClick={() => saveBill()} disabled={loading || !selectedTable} style={{ padding: '12px' }}>
+            <button onClick={() => saveBill()} disabled={loading || !selectedTable} style={{ padding: '12px', fontSize: '13px' }}>
               <Save size={16} /> SAVE
             </button>
-            <button onClick={() => saveBill('kot')} disabled={loading || !selectedTable} style={{ padding: '12px' }}>
+            <button onClick={() => saveBill('kot')} disabled={loading || !selectedTable} style={{ padding: '12px', fontSize: '13px' }}>
               <FileText size={16} /> KOT
             </button>
-            <button onClick={handlePayment} className="primary" style={{ padding: '12px', gridColumn: 'span 2' }} disabled={loading || !selectedTable}>
+            <button onClick={handlePayment} className="primary" style={{ padding: '12px', fontSize: '13px' }} disabled={loading || !selectedTable}>
               <CheckCircle size={16} /> PAYMENT
             </button>
-            <button onClick={handlePrint} style={{ padding: '12px', gridColumn: 'span 2' }}>
-              <Printer size={16} /> PRINT BILL
+            <button onClick={handlePrint} style={{ padding: '12px', fontSize: '13px' }}>
+              <Printer size={16} /> PRINT
             </button>
           </div>
         </div>
