@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { collection, addDoc, onSnapshot, query, where, doc, updateDoc, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Search, Plus, Minus, CreditCard, ChevronDown, Trash2, Printer, Save, FileText, CheckCircle } from 'lucide-react';
+import '../css/Billing.css';
 
 const Billing = () => {
   const { restaurant, user } = useAuth();
@@ -178,144 +179,154 @@ const Billing = () => {
   );
 
   return (
-    <div className="billing-grid">
-      {/* Search and Product Selection */}
-      <div className="flex-col" style={{ overflowY: 'auto', paddingRight: '24px', paddingLeft: '8px' }}>
-        <div className="mb-12 flex gap-6 no-print">
-          <div style={{ flex: 1, position: 'relative' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#999' }} />
+    <div className="billing-page">
+      <div className="page-header">
+        <h1 className="page-title">Billing Terminal</h1>
+        <div className="flex gap-4 no-print">
+           <div style={{ position: 'relative', width: '300px' }}>
+            <Search size={18} style={{ position: 'absolute', left: '12px', top: '10px', color: 'var(--text-muted)' }} />
             <input 
-              placeholder="Search items..." 
-              style={{ paddingLeft: '40px', marginBottom: '0', height: '48px' }}
+              className="search-input"
+              placeholder="Search items or codes..." 
+              style={{ paddingLeft: '40px', marginBottom: '0' }}
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
           </div>
           <select 
-            style={{ width: '180px', marginBottom: '0', height: '42px' }}
+            className="search-input"
+            style={{ width: '180px', marginBottom: '0' }}
             value={activeCategory}
             onChange={e => setActiveCategory(e.target.value)}
           >
-            <option value="all">All Categories</option>
+            <option value="all">Categories</option>
             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
-
-        <div className="grid-items" style={{ padding: '8px 0' }}>
-          {filteredItems.map(item => (
-            <div 
-              key={item.id} 
-              className="card" 
-              style={{ padding: '0', overflow: 'hidden', cursor: 'pointer', transition: 'transform 0.1s' }}
-              onClick={() => addToCart(item)}
-            >
-              <div style={{ height: '120px', background: '#f6f6f7', position: 'relative' }}>
-                {item.image ? (
-                  <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc' }}>
-                    <Plus size={24} strokeWidth={1} />
-                  </div>
-                )}
-                {item.isVeg && <div style={{ position: 'absolute', top: '8px', right: '8px', width: '10px', height: '10px', border: '1px solid green', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'green' }}/></div>}
-              </div>
-              <div className="p-3">
-                <p style={{ fontWeight: '600', fontSize: '13px', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</p>
-                <div className="flex justify-between items-center">
-                   <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{item.shortcode || '-'}</p>
-                   <p style={{ color: 'var(--primary-color)', fontWeight: '700', fontSize: '14px' }}>₹{item.price.toFixed(2)}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
 
-      {/* Cart/Summary Section */}
-      <div className="card" style={{ padding: '0', display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <div className="card-header" style={{ margin: '0', background: 'white' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '800' }}>BILLING TERMINAL</h2>
-        </div>
-        
-        <div className="p-4 no-print" style={{ background: '#fafafa', borderBottom: '1px solid var(--border-color)' }}>
-          <div className="flex gap-2">
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '11px', color: '#999' }}>TABLE</label>
-              <select 
-                value={selectedTable} 
-                onChange={e => { setSelectedTable(e.target.value); setSelectedBillId(''); }}
-                style={{ marginBottom: '8px', height: '38px' }}
+      <div className="billing-grid">
+        {/* Product Selection */}
+        <div style={{ overflowY: 'auto', paddingRight: '8px' }}>
+          <div className="grid-items" style={{ gap: '20px' }}>
+            {filteredItems.map(item => (
+              <div 
+                key={item.id} 
+                className="stat-card item-card" 
+                style={{ padding: '0', overflow: 'hidden' }}
+                onClick={() => addToCart(item)}
               >
-                <option value="">Select Table</option>
-                {tables.map(t => <option key={t.id} value={t.shortcode}>{t.name}</option>)}
-              </select>
-            </div>
-            <div style={{ flex: 1.5 }}>
-              <label style={{ fontSize: '11px', color: '#999' }}>ACTIVE BILLS</label>
-              <select 
-                value={selectedBillId} 
-                onChange={e => setSelectedBillId(e.target.value)}
-                style={{ marginBottom: '8px', height: '38px' }}
-                disabled={!selectedTable}
-              >
-                <option value="">+ New Bill</option>
-                {activeBills.map(b => (
-                   <option key={b.id} value={b.id}>{b.billNumber} (₹{b.grandTotal.toFixed(2)}) - {b.status}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
-          {cart.length === 0 ? (
-            <div style={{ textAlign: 'center', marginTop: '40px', color: '#ccc' }}>
-              <FileText size={40} strokeWidth={1} style={{ marginBottom: '12px' }} />
-              <p style={{ fontSize: '12px' }}>No items in selected bill</p>
-            </div>
-          ) : (
-            cart.map(item => (
-              <div key={item.id} className="flex justify-between items-center mb-6 px-1">
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: '13px', fontWeight: '600' }}>{item.name}</p>
-                  <p style={{ fontSize: '11px', color: '#666' }}>₹{item.price.toFixed(2)}</p>
+                <div style={{ height: '140px', background: '#F8F9FD', position: 'relative' }}>
+                  {item.image ? (
+                    <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#CBD5E0' }}>
+                      <Package size={32} strokeWidth={1} />
+                    </div>
+                  )}
+                  {item.isVeg && (
+                    <div style={{ position: 'absolute', top: '10px', right: '10px', width: '18px', height: '18px', border: '1px solid #00C853', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', borderRadius: '4px' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00C853' }} />
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center no-print" style={{ border: '1px solid #ddd', borderRadius: '4px' }}>
-                    <button onClick={() => updateQuantity(item.id, -1)} style={{ padding: '2px', height: '24px', border: 'none', background: 'transparent' }}><Minus size={12}/></button>
-                    <span style={{ padding: '0 6px', fontSize: '12px', fontWeight: '700' }}>{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, 1)} style={{ padding: '2px', height: '24px', border: 'none', background: 'transparent' }}><Plus size={12}/></button>
+                <div style={{ padding: '16px' }}>
+                  <p style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-main)', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</p>
+                  <div className="flex justify-between items-center">
+                     <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{item.shortcode || '-'}</p>
+                     <p style={{ color: 'var(--primary)', fontWeight: '800', fontSize: '16px' }}>₹{item.price.toFixed(2)}</p>
                   </div>
-                  <p style={{ width: '50px', textAlign: 'right', fontSize: '13px', fontWeight: '700' }}>₹{(item.price * item.quantity).toFixed(2)}</p>
                 </div>
               </div>
-            ))
-          )}
+            ))}
+          </div>
         </div>
 
-        <div className="p-5" style={{ background: '#f6f6f7', borderTop: '1px solid var(--border-color)' }}>
-          <div className="flex justify-between mb-2">
-            <span style={{ fontSize: '12px', color: '#666' }}>Subtotal</span>
-            <span style={{ fontSize: '13px', fontWeight: '600' }}>₹{subtotal.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between items-center mb-4" style={{ padding: '0 4px' }}>
-            <span style={{ fontSize: '14px', fontWeight: '800' }}>TOTAL</span>
-            <span style={{ fontSize: '20px', fontWeight: '900', color: 'var(--primary-color)' }}>₹{total.toFixed(2)}</span>
+        {/* Cart Terminal */}
+        <div className="stat-card" style={{ padding: '0', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+          <div style={{ padding: '20px', borderBottom: '1px solid var(--border)', background: '#FCFCFD' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Terminal</h3>
           </div>
           
-          <div className="grid no-print" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <button onClick={() => saveBill()} disabled={loading || !selectedTable} style={{ padding: '12px', fontSize: '13px' }}>
-              <Save size={16} /> SAVE
-            </button>
-            <button onClick={() => saveBill('kot')} disabled={loading || !selectedTable} style={{ padding: '12px', fontSize: '13px' }}>
-              <FileText size={16} /> KOT
-            </button>
-            <button onClick={handlePayment} className="primary" style={{ padding: '12px', fontSize: '13px' }} disabled={loading || !selectedTable}>
-              <CheckCircle size={16} /> PAYMENT
-            </button>
-            <button onClick={handlePrint} style={{ padding: '12px', fontSize: '13px' }}>
-              <Printer size={16} /> PRINT
-            </button>
+          <div style={{ padding: '16px', background: '#F8F9FD', borderBottom: '1px solid var(--border)' }} className="no-print">
+            <div className="flex gap-2">
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-muted)' }}>TABLE</label>
+                <select 
+                  className="search-input"
+                  style={{ marginBottom: '0', height: '42px', fontSize: '13px' }}
+                  value={selectedTable} 
+                  onChange={e => { setSelectedTable(e.target.value); setSelectedBillId(''); }}
+                >
+                  <option value="">Table</option>
+                  {tables.map(t => <option key={t.id} value={t.shortcode}>{t.name}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1.5 }}>
+                <label style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-muted)' }}>ACTIVE BILL</label>
+                <select 
+                  className="search-input"
+                  style={{ marginBottom: '0', height: '42px', fontSize: '13px' }}
+                  disabled={!selectedTable}
+                  value={selectedBillId} 
+                  onChange={e => setSelectedBillId(e.target.value)}
+                >
+                  <option value="">+ New Bill</option>
+                  {activeBills.map(b => (
+                     <option key={b.id} value={b.id}>{b.billNumber} (₹{b.grandTotal.toFixed(2)})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+            {cart.length === 0 ? (
+              <div style={{ textAlign: 'center', marginTop: '60px', color: 'var(--text-muted)' }}>
+                <FileText size={48} strokeWidth={1} style={{ marginBottom: '16px', opacity: 0.3 }} />
+                <p style={{ fontSize: '14px' }}>Bill is empty</p>
+              </div>
+            ) : (
+              cart.map(item => (
+                <div key={item.id} className="flex justify-between items-center mb-6">
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: '14px', fontWeight: '600' }}>{item.name}</p>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>₹{item.price.toFixed(2)}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center no-print" style={{ background: '#F8F9FD', borderRadius: '8px', padding: '4px' }}>
+                      <button className="btn" onClick={() => updateQuantity(item.id, -1)} style={{ padding: '2px', border: 'none', background: 'transparent', boxShadow: 'none' }}><Minus size={14}/></button>
+                      <span style={{ minWidth: '24px', textAlign: 'center', fontSize: '13px', fontWeight: '700' }}>{item.quantity}</span>
+                      <button className="btn" onClick={() => updateQuantity(item.id, 1)} style={{ padding: '2px', border: 'none', background: 'transparent', boxShadow: 'none' }}><Plus size={14}/></button>
+                    </div>
+                    <p style={{ width: '60px', textAlign: 'right', fontSize: '14px', fontWeight: '700' }}>₹{(item.price * item.quantity).toFixed(2)}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div style={{ padding: '24px', background: '#FCFCFD', borderTop: '1px solid var(--border)' }}>
+            <div className="flex justify-between mb-4">
+              <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Subtotal</span>
+              <span style={{ fontSize: '15px', fontWeight: '600' }}>₹{subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-center mb-6">
+              <span style={{ fontSize: '16px', fontWeight: '800' }}>TOTAL</span>
+              <span style={{ fontSize: '24px', fontWeight: '900', color: 'var(--primary)' }}>₹{total.toFixed(2)}</span>
+            </div>
+            
+            <div className="no-print" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <button className="btn btn-outline" onClick={() => saveBill()} disabled={loading || !selectedTable} style={{ padding: '14px' }}>
+                <Save size={18} /> SAVE
+              </button>
+              <button className="btn btn-outline" onClick={() => saveBill('kot')} disabled={loading || !selectedTable} style={{ padding: '14px' }}>
+                <Printer size={18} /> KOT
+              </button>
+              <button className="btn btn-primary" onClick={handlePayment} style={{ gridColumn: 'span 2', padding: '14px' }} disabled={loading || !selectedTable}>
+                <CheckCircle size={18} /> PROCEED TO PAYMENT
+              </button>
+            </div>
           </div>
         </div>
       </div>

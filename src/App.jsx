@@ -24,7 +24,11 @@ import {
   Users, 
   LogOut,
   ChevronRight,
-  FileText // Add this line
+  FileText,
+  Search,
+  Bell,
+  Info,
+  ChevronDown
 } from 'lucide-react';
 
 const ProtectedRoute = ({ children }) => {
@@ -50,13 +54,16 @@ const Sidebar = () => {
   const location = useLocation();
   const { logout, user } = useAuth();
 
-  const links = [
+  const mainLinks = [
     { to: '/', name: 'Dashboard', icon: LayoutDashboard },
     { to: '/billing', name: 'Billing', icon: Receipt },
-    { to: '/all-bills', name: 'All Bills', icon: FileText }, // Add this line
+    { to: '/all-bills', name: 'All Bills', icon: FileText },
     { to: '/items', name: 'Items', icon: Package },
     { to: '/categories', name: 'Categories', icon: Tag },
     { to: '/tables', name: 'Tables', icon: Layout },
+  ];
+
+  const managementLinks = [
     { to: '/reports', name: 'Reports', icon: BarChart3 },
     { to: '/investments', name: 'Investments', icon: Wallet },
     { to: '/staff', name: 'Staff', icon: Users },
@@ -64,65 +71,94 @@ const Sidebar = () => {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-brand">
-        <h2 style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '32px', height: '32px', background: 'var(--primary-color)', borderRadius: '6px', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '800' }}>
-            L
-          </div>
-          <span style={{ fontWeight: '800', letterSpacing: '-0.5px' }}>LEKA</span>
-        </h2>
+      <div className="sidebar-logo">
+        <div className="logo-box">L</div>
+        <span className="logo-text">Deliro</span>
       </div>
       
       <div className="sidebar-nav">
-        {links.map((link) => (
-          <Link
-            key={link.to}
-            to={link.to}
-            className={`sidebar-link ${location.pathname === link.to ? 'active' : ''}`}
-          >
-            <link.icon size={20} strokeWidth={location.pathname === link.to ? 2.5 : 2} />
-            {link.name}
-            {location.pathname === link.to && <div style={{ marginLeft: 'auto' }}><ChevronRight size={14} /></div>}
-          </Link>
-        ))}
-      </div>
-
-      <div style={{ marginTop: 'auto', padding: '12px', borderTop: '1px solid var(--border-color)' }}>
-        <div className="flex items-center gap-3 p-2 mb-2">
-          {user?.photoURL ? (
-            <img src={user.photoURL} alt="User" style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
-          ) : (
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Users size={16}/></div>
-          )}
-          <div style={{ overflow: 'hidden' }}>
-            <p style={{ fontSize: '12px', fontWeight: '600', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.displayName}</p>
-            <p style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>Restaurant Admin</p>
-          </div>
+        <div className="sidebar-group">
+          <p className="sidebar-group-label">Main</p>
+          {mainLinks.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className={`nav-link ${location.pathname === link.to ? 'active' : ''}`}
+            >
+              <link.icon size={18} />
+              {link.name}
+            </Link>
+          ))}
         </div>
-        <button onClick={logout} className="sidebar-link" style={{ width: '100%', border: 'none', background: 'transparent' }}>
-          <LogOut size={18} />
-          Sign Out
-        </button>
+
+        <div className="sidebar-group">
+          <p className="sidebar-group-label">Management</p>
+          {managementLinks.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className={`nav-link ${location.pathname === link.to ? 'active' : ''}`}
+            >
+              <link.icon size={18} />
+              {link.name}
+            </Link>
+          ))}
+        </div>
+
+        <div className="sidebar-pro-card">
+          <p className="pro-card-title">Pro Plans</p>
+          <p className="pro-card-desc">Upgrade to get more features and better analytics.</p>
+          <button className="btn btn-pro">Try Pro</button>
+        </div>
       </div>
     </aside>
   );
 };
 
-const DashboardLayout = ({ children }) => {
-  const { restaurant } = useAuth();
+const TopBar = () => {
+  const { restaurant, logout, user } = useAuth();
+  
   return (
-    <div className="app-wrapper">
+    <div className="top-bar">
+      <div className="search-container">
+        <div className="search-icon"><Search size={18} /></div>
+        <input type="text" className="search-input" placeholder="Search orders, bills..." />
+      </div>
+
+      <div className="top-bar-actions">
+        <div className="action-icon"><Bell size={20} /></div>
+        <div className="action-icon"><Info size={20} /></div>
+        
+        <div className="user-profile">
+          <img 
+            src={user?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100'} 
+            className="user-avatar" 
+            alt="Profile" 
+          />
+          <div className="user-info">
+            <p className="name">Welcome, {user?.displayName?.split(' ')[0] || 'User'}!</p>
+          </div>
+          <ChevronDown size={16} />
+        </div>
+        
+        <button onClick={logout} className="action-icon" title="Sign Out">
+          <LogOut size={18} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const DashboardLayout = ({ children }) => {
+  return (
+    <div className="app-container">
       <Sidebar />
-      <main style={{ flex: 1, height: '100vh', overflowY: 'auto' }}>
-        <header style={{ height: '56px', background: 'white', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', padding: '0 24px', position: 'sticky', top: 0, zIndex: 10 }}>
-          <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-            Restaurant: <span style={{ color: 'var(--text-primary)' }}>{restaurant?.name || 'Default Restaurant'}</span>
-          </p>
-        </header>
-        <div className="p-6">
+      <div className="main-content">
+        <TopBar />
+        <div className="page-container">
           {children}
         </div>
-      </main>
+      </div>
     </div>
   );
 };

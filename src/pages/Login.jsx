@@ -1,6 +1,8 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { LogIn } from 'lucide-react';
+import '../css/Login.css';
 
 const Login = () => {
   const { user, loginWithGoogle } = useAuth();
@@ -8,29 +10,29 @@ const Login = () => {
   if (user) return <Navigate to="/" />;
 
   return (
-    <div style={{
-      height: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'white'
-    }}>
-      <div className="card" style={{ maxWidth: '400px', width: '100%', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '32px', marginBottom: '8px' }}>LEKA</h1>
-        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '32px' }}>
-          RESTAURANT BILLING SYSTEM / SWISS EDITION
+    <div className="login-page">
+      <div className="login-card">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '32px' }}>
+          <div className="logo-box" style={{ width: '48px', height: '48px', fontSize: '24px' }}>L</div>
+          <span className="logo-text" style={{ fontSize: '28px' }}>Deliro</span>
+        </div>
+        
+        <h1 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '8px', color: 'var(--text-main)' }}>Welcome back!</h1>
+        <p style={{ fontSize: '15px', color: 'var(--text-muted)', marginBottom: '40px' }}>
+          Please sign in to access your dashboard.
         </p>
         
         <button 
           onClick={loginWithGoogle} 
-          className="primary" 
-          style={{ width: '100%', height: '48px', fontSize: '16px' }}
+          className="btn btn-primary" 
+          style={{ width: '100%', height: '56px', fontSize: '16px', gap: '12px' }}
         >
+          <LogIn size={20} />
           Sign in with Google
         </button>
         
-        <div style={{ marginTop: '24px', borderTop: '1px solid #ddd', paddingTop: '16px' }}>
-          <p style={{ fontSize: '10px', color: '#999' }}>
+        <div style={{ marginTop: '40px', borderTop: '1px solid var(--border)', paddingTop: '24px' }}>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             © {new Date().getFullYear()} CONNECT CLICK NOVA
           </p>
         </div>

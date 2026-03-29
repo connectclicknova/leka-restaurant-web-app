@@ -12,6 +12,7 @@ import {
   ArrowUpRight, 
   Filter 
 } from 'lucide-react';
+import '../css/Reports.css';
 
 const Reports = () => {
   const { restaurant } = useAuth();
@@ -117,104 +118,102 @@ const Reports = () => {
   if (loading) return <div className="p-6">Generating report...</div>;
 
   return (
-    <div className="flex-col gap-10" style={{ paddingBottom: '60px' }}>
-      <div className="flex justify-between items-center mb-4">
+    <div className="reports-page">
+      <div className="page-header mb-8">
         <div>
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <BarChart3 color="var(--primary-color)" /> Sales Analysis
-          </h1>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Item-wise performance report for your restaurant</p>
+          <h1 className="page-title">Sales Analysis</h1>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Item-wise performance report for your restaurant</p>
         </div>
         
-        <div className="flex items-center gap-3">
-          <label style={{ margin: 0, fontSize: '12px', color: '#999' }}>TIME PERIOD:</label>
-          <div style={{ position: 'relative', width: '200px' }}>
+        <div className="flex items-center gap-4">
+          <div style={{ position: 'relative' }}>
+            <Calendar size={18} style={{ position: 'absolute', left: '12px', top: '10px', color: 'var(--text-muted)' }} />
             <select 
+              className="search-input"
               value={dateFilter} 
               onChange={e => setDateFilter(e.target.value)}
-              style={{ paddingLeft: '40px', marginBottom: '0', background: 'white', borderRadius: '8px', cursor: 'pointer' }}
+              style={{ paddingLeft: '40px', marginBottom: '0', background: 'white', width: '200px' }}
             >
               {filterOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
-            <Calendar size={18} style={{ position: 'absolute', left: '12px', top: '10px', color: '#666' }} />
           </div>
         </div>
       </div>
 
       {/* Stats Overview */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '8px' }}>
-        <div className="card" style={{ padding: '24px', border: 'none', background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)', color: 'white' }}>
-          <div className="flex justify-between items-start">
-            <div>
-              <p style={{ fontSize: '14px', fontWeight: '500', opacity: '0.9', marginBottom: '8px' }}>TOTAL REVENUE</p>
-              <h2 style={{ fontSize: '32px', fontWeight: '900', letterSpacing: '-0.5px' }}>₹{totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</h2>
+      <div className="stats-grid mb-8">
+        <div className="stat-card" style={{ background: 'linear-gradient(135deg, #0066FF, #0047B3)', color: 'white', border: 'none' }}>
+          <div className="stat-header">
+            <div className="stat-icon-box" style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}>
+              <DollarSign size={20} />
             </div>
-            <div style={{ padding: '10px', background: 'rgba(255,255,255,0.2)', borderRadius: '12px' }}>
-              <TrendingUp size={24} />
+            <div className="stat-trend trend-up" style={{ color: 'rgba(255,255,255,0.9)' }}>
+              <TrendingUp size={14} /> +15.5%
             </div>
           </div>
-          <p style={{ marginTop: '16px', fontSize: '12px', opacity: '0.8' }}>Generated from {totalSales} confirmed bills</p>
+          <p className="stat-value" style={{ color: 'white' }}>₹{totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+          <p className="stat-label" style={{ color: 'rgba(255,255,255,0.7)' }}>TOTAL REVENUE ({totalSales} Bills)</p>
         </div>
 
-        <div className="card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div style={{ padding: '16px', background: '#f0eefc', borderRadius: '50%', color: 'var(--primary-color)' }}>
-            <Package size={28} />
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon-box">
+              <Package size={20} />
+            </div>
+            <div className="stat-trend trend-up">
+              <TrendingUp size={14} /> Good performance
+            </div>
           </div>
-          <div>
-            <p style={{ fontSize: '14px', color: '#999', fontWeight: '500' }}>MENU ITEMS SOLD</p>
-            <h2 style={{ fontSize: '28px', fontWeight: '800' }}>{itemWiseData.length} <span style={{ fontSize: '14px', color: '#ccc', fontWeight: '400' }}>Unique Items</span></h2>
-          </div>
+          <p className="stat-value">{itemWiseData.length}</p>
+          <p className="stat-label">UNIQUE ITEMS SOLD</p>
         </div>
       </div>
 
       {/* Item Table */}
-      <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-        <div className="card-header" style={{ margin: 0, padding: '16px 20px', display: 'flex', justifyBetween: 'true', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '15px' }}>ITEMIZED PERFORMANCE</h2>
-          <div style={{ fontSize: '11px', fontWeight: '700', color: '#999', background: '#f6f6f7', padding: '4px 8px', borderRadius: '100px' }}>
-            {itemWiseData.length} ITEMS FOUND
-          </div>
+      <div className="table-container">
+        <div style={{ padding: '20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#FCFCFD' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Itemized Performance</h3>
+          <span className="badge-status status-delivered">{itemWiseData.length} items sold</span>
         </div>
         
-        <div className="table-container" style={{ border: 'none', borderRadius: '0' }}>
-          <table className="table">
-            <thead>
-              <tr style={{ background: '#fafafa' }}>
-                <th style={{ width: '40%', paddingLeft: '24px' }}>Item Name</th>
-                <th style={{ textAlign: 'center' }}>Qty Sold</th>
-                <th style={{ textAlign: 'right', paddingRight: '24px' }}>Net Revenue</th>
+        <table className="table">
+          <thead>
+            <tr>
+              <th style={{ width: '80px', textAlign: 'center' }}>Rank</th>
+              <th>Item Name</th>
+              <th style={{ textAlign: 'center' }}>Quantity Sold</th>
+              <th style={{ textAlign: 'right' }}>Net Revenue</th>
+            </tr>
+          </thead>
+          <tbody>
+            {itemWiseData.length === 0 ? (
+              <tr>
+                <td colSpan="4" style={{ textAlign: 'center', padding: '100px 0', color: 'var(--text-muted)' }}>
+                  No sales data found for the selected period.
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {itemWiseData.length === 0 ? (
-                <tr>
-                  <td colSpan="3" style={{ textAlign: 'center', padding: '100px 0', color: '#999' }}>
-                    No sales data found for the selected time period.
+            ) : (
+              itemWiseData.map((item, idx) => (
+                <tr key={item.id}>
+                  <td style={{ textAlign: 'center' }}>
+                    <span style={{ fontWeight: '800', color: idx < 3 ? 'var(--primary)' : 'var(--text-muted)', fontSize: '14px' }}>#{idx + 1}</span>
+                  </td>
+                  <td>
+                    <span style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '15px' }}>{item.name}</span>
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    <span style={{ padding: '6px 12px', background: 'var(--primary-light)', color: 'var(--primary)', borderRadius: '10px', fontSize: '13px', fontWeight: '800' }}>
+                      {item.quantity}
+                    </span>
+                  </td>
+                  <td style={{ textAlign: 'right', fontWeight: '800', color: 'var(--text-main)', fontSize: '16px' }}>
+                    ₹{item.revenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </td>
                 </tr>
-              ) : (
-                itemWiseData.map((item, idx) => (
-                  <tr key={item.id}>
-                    <td style={{ paddingLeft: '24px' }}>
-                      <div className="flex items-center gap-3">
-                        <span style={{ fontSize: '12px', color: '#ccc', fontWeight: '600', width: '20px' }}>{idx + 1}</span>
-                        <span style={{ fontWeight: '600', fontSize: '14px' }}>{item.name}</span>
-                      </div>
-                    </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <span style={{ padding: '4px 10px', background: '#eef2ff', color: '#4f46e5', borderRadius: '100px', fontSize: '13px', fontWeight: '700' }}>
-                        {item.quantity}
-                      </span>
-                    </td>
-                    <td style={{ textAlign: 'right', paddingRight: '24px', fontWeight: '800', color: 'var(--text-primary)', fontSize: '15px' }}>
-                      ₹{item.revenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
