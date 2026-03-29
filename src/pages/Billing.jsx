@@ -180,13 +180,13 @@ const Billing = () => {
   return (
     <div className="billing-grid">
       {/* Search and Product Selection */}
-      <div className="flex-col" style={{ overflowY: 'auto', paddingRight: '8px' }}>
-        <div className="mb-6 flex gap-4 no-print">
+      <div className="flex-col" style={{ overflowY: 'auto', paddingRight: '24px', paddingLeft: '8px' }}>
+        <div className="mb-12 flex gap-6 no-print">
           <div style={{ flex: 1, position: 'relative' }}>
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#999' }} />
             <input 
               placeholder="Search items..." 
-              style={{ paddingLeft: '40px', marginBottom: '0', height: '42px' }}
+              style={{ paddingLeft: '40px', marginBottom: '0', height: '48px' }}
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
@@ -201,7 +201,7 @@ const Billing = () => {
           </select>
         </div>
 
-        <div className="grid-items" style={{ padding: '4px' }}>
+        <div className="grid-items" style={{ padding: '8px 0' }}>
           {filteredItems.map(item => (
             <div 
               key={item.id} 
@@ -298,7 +298,7 @@ const Billing = () => {
             <span style={{ fontSize: '12px', color: '#666' }}>Subtotal</span>
             <span style={{ fontSize: '13px', fontWeight: '600' }}>₹{subtotal.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between items-center mb-4" style={{ paddingTop: '8px', borderTop: '1px dashed #ccc' }}>
+          <div className="flex justify-between items-center mb-4" style={{ padding: '0 4px' }}>
             <span style={{ fontSize: '14px', fontWeight: '800' }}>TOTAL</span>
             <span style={{ fontSize: '20px', fontWeight: '900', color: 'var(--primary-color)' }}>₹{total.toFixed(2)}</span>
           </div>
