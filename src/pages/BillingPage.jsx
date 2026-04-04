@@ -1644,16 +1644,16 @@ const BillingPage = () => {
                 <button
                   onClick={handleSaveBill}
                   disabled={saving}
-                  className="flex flex-col items-center justify-center px-2 py-2 md:py-3 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex flex-row items-center justify-center gap-2 px-2 py-2 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {saving ? (
                     <>
-                      <Loader2 className="w-4 md:w-5 h-4 md:h-5 animate-spin mb-1" />
+                      <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" />
                       <span className="text-xs">Saving...</span>
                     </>
                   ) : (
                     <>
-                      <Save className="w-4 md:w-5 h-4 md:h-5 mb-1" />
+                      <Save className="w-3 h-3 md:w-4 md:h-4" />
                       <span className="text-xs">Save</span>
                     </>
                   )}
@@ -1661,25 +1661,25 @@ const BillingPage = () => {
                 <button
                   onClick={handleSaveAndPrint}
                   disabled={saving}
-                  className="flex flex-col items-center justify-center px-2 py-2 md:py-3 border border-[#ec2b25] text-[#ec2b25] hover:bg-[#ec2b25] hover:text-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex flex-row items-center justify-center gap-2 px-1 py-2 border border-[#ec2b25] text-[#ec2b25] hover:bg-[#ec2b25] hover:text-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Printer className="w-4 md:w-5 h-4 md:h-5 mb-1" />
-                  <span className="text-xs">Save & Print</span>
+                  <Printer className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="text-[10px] md:text-xs">Save & Print</span>
                 </button>
                 <button
                   onClick={handleSaveAndKOT}
                   disabled={saving}
-                  className="flex flex-col items-center justify-center px-2 py-2 md:py-3 border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex flex-row items-center justify-center gap-2 px-1 py-2 border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <ClipboardList className="w-4 md:w-5 h-4 md:h-5 mb-1" />
-                  <span className="text-xs">Save & KOT</span>
+                  <ClipboardList className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="text-[10px] md:text-xs">Save & KOT</span>
                 </button>
                 <button
                   onClick={handlePayment}
                   disabled={!currentBillId}
-                  className="flex flex-col items-center justify-center px-2 py-2 md:py-3 bg-green-600 text-white hover:bg-green-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex flex-row items-center justify-center gap-2 px-2 py-2 bg-green-600 text-white hover:bg-green-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <CreditCard className="w-4 md:w-5 h-4 md:h-5 mb-1" />
+                  <CreditCard className="w-3 h-3 md:w-4 md:h-4" />
                   <span className="text-xs">Payment</span>
                 </button>
               </div>
