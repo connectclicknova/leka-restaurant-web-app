@@ -4,7 +4,7 @@ import { collection, addDoc, getDocs, query, orderBy, deleteDoc, doc, updateDoc 
 import { db } from '../config/firebase';
 import AddCategoryModal from '../components/AddCategoryModal';
 import AddItemModal from '../components/AddItemModal';
-import { printMenuItems, preConnectQZ } from '../utils/qzPrint';
+import { printMenuItems } from '../utils/qzPrint';
 import toast from 'react-hot-toast';
 
 const MenuPage = () => {
@@ -181,8 +181,7 @@ const MenuPage = () => {
   // Print menu items
   const handlePrintMenu = async () => {
     try {
-      toast.loading('Connecting to printer...');
-      await preConnectQZ();
+      toast.loading('Checking printer connection...');
       
       // Filter items based on selected category
       const itemsToPrint = selectedCategory === 'all' 

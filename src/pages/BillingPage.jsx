@@ -4,7 +4,7 @@ import { collection, addDoc, getDocs, query, orderBy, limit, startAfter, getCoun
 import { db } from '../config/firebase';
 import toast from 'react-hot-toast';
 import ThermalBill from '../components/Billing/ThermalBill';
-import { printThermalBill, printKOT, preConnectQZ, connectBluetoothPrinter, isBluetoothConnected, isMobile, isWebBluetoothAvailable } from '../utils/qzPrint';
+import { printThermalBill, printKOT, connectBluetoothPrinter, isBluetoothConnected, isMobile, isWebBluetoothAvailable } from '../utils/qzPrint';
 import { usePrinter } from '../context/PrinterContext';
 
 import { ENABLE_AGGREGATORS } from '../config/features';
@@ -123,15 +123,6 @@ const BillingPage = () => {
     };
     
     fetchInitialData();
-    
-    // Pre-connect QZ Tray for fast printing (desktop only)
-    if (!isMobile()) {
-      preConnectQZ().then(connected => {
-        if (connected) {
-          console.log('QZ Tray ready for fast printing');
-        }
-      });
-    }
   }, []);
 
   // Fetch bill statistics for today - OPTIMIZED: Uses bills already fetched
@@ -836,14 +827,14 @@ const BillingPage = () => {
       change: savedChange
     };
 
-    // Try QZ Tray first for direct printing, fallback to browser print
+    // Try Bluetooth printing, fallback to browser print
     try {
-      console.log('Attempting QZ Tray print...');
+      console.log('Attempting Bluetooth print...');
       await printThermalBill(billData);
-      toast.success('Printed via QZ Tray!', { duration: 1500 });
+      toast.success('Bill printed via Bluetooth!', { duration: 1500 });
     } catch (err) {
-      console.error('QZ Tray error:', err.message);
-      toast.error(`QZ Error: ${err.message}. Using browser print...`, { duration: 3000 });
+      console.error('Print Error:', err.message);
+      toast.error(`Printer Error: ${err.message}. Using browser print...`, { duration: 3000 });
       // Fallback to browser print
       setTimeout(() => window.print(), 500);
     }
@@ -882,11 +873,11 @@ const BillingPage = () => {
     };
 
     try {
-      console.log('Printing paid bill:', billData);
+      console.log('Printing paid bill via Bluetooth:', billData);
       await printThermalBill(billData);
       toast.success('Bill printed!', { duration: 1500 });
     } catch (err) {
-      console.error('QZ Tray error:', err.message);
+      console.error('Print Error:', err.message);
       toast.error(`Print Error: ${err.message}`, { duration: 3000 });
     }
   };
