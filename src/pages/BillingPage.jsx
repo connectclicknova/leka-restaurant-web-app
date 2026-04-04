@@ -1322,14 +1322,14 @@ const BillingPage = () => {
                 </div>
 
                 {/* Tables Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 flex-1 overflow-y-auto pr-1 scrollbar-thin content-start">
+                <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-3 gap-1.5 flex-1 overflow-y-auto pr-1 scrollbar-thin content-start">
                   {filteredTables.map(table => {
                     const openBillsCount = bills.filter(bill => bill.tableId === table.id && bill.status === 'open').length;
                     return (
                       <button
                         key={table.id}
                         onClick={() => handleTableSelect(table)}
-                        className={`aspect-square border-2 flex flex-col items-center justify-center cursor-pointer transition-colors relative ${
+                        className={`aspect-square border flex flex-col items-center justify-center cursor-pointer transition-colors relative ${
                           selectedTable?.id === table.id
                             ? 'border-[#ec2b25] bg-[#ec2b25] text-white'
                             : openBillsCount > 0
@@ -1337,9 +1337,9 @@ const BillingPage = () => {
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
-                        <span className="font-mono font-bold">{table.shortCode}</span>
+                        <span className="font-mono font-bold text-[10px] md:text-xs tracking-tighter">{table.shortCode}</span>
                         {openBillsCount > 0 && selectedTable?.id !== table.id && (
-                          <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-orange-500 text-white text-[8px] font-black rounded-full flex items-center justify-center shadow-sm">
                             {openBillsCount}
                           </span>
                         )}
