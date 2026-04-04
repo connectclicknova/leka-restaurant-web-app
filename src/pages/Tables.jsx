@@ -1,166 +1,132 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { collection, addDoc, onSnapshot, query, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase/config';
-import { Plus, X, Layout, Edit2, Trash2 } from 'lucide-react';
-import '../css/Tables.css';
+import React from 'react';
+import { useRestaurant } from '../context/RestaurantContext';
+import Card from '../components/UI/Card';
+import Badge from '../components/UI/Badge';
+import { Users } from 'lucide-react';
 
 const Tables = () => {
-  const { restaurant } = useAuth();
-  const [tables, setTables] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({ name: '', shortcode: '' });
-  const [loading, setLoading] = useState(false);
+  const { tables, orders } = useRestaurant();
 
-  useEffect(() => {
-    if (!restaurant?.id) return;
-    const q = query(collection(db, 'restaurants', restaurant.id, 'tables'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setTables(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    });
-    return unsubscribe;
-  }, [restaurant]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const tableData = {
-        name: formData.name,
-        shortcode: formData.shortcode,
-        updatedAt: new Date().toISOString()
-      };
-
-      if (editingId) {
-        await updateDoc(doc(db, 'restaurants', restaurant.id, 'tables', editingId), tableData);
-      } else {
-        await addDoc(collection(db, 'restaurants', restaurant.id, 'tables'), {
-          ...tableData,
-          status: 'available',
-          createdAt: new Date().toISOString()
-        });
-      }
-      closeModal();
-    } catch (error) {
-      console.error("Error saving table", error);
-    } finally {
-      setLoading(false);
-    }
+  const getTableOrder = (tableId) => {
+    return orders.find(order => order.tableId === tableId && order.status !== 'completed');
   };
 
-  const deleteTable = async (id) => {
-    if (window.confirm("Permanent delete this table?")) {
-      await deleteDoc(doc(db, 'restaurants', restaurant.id, 'tables', id));
-    }
+  const formatCurrency = (amount) => {
+    return `₹${amount.toFixed(2)}`;
   };
 
-  const openEdit = (table) => {
-    setEditingId(table.id);
-    setFormData({ name: table.name, shortcode: table.shortcode });
-    setShowModal(true);
+  const getStatusColor = (status) => {
+    const colors = {
+      available: 'bg-green-100 border-green-300 hover:border-green-400',
+      occupied: 'bg-red-100 border-red-300 hover:border-red-400',
+      reserved: 'bg-orange-100 border-orange-300 hover:border-orange-400',
+    };
+    return colors[status] || colors.available;
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    setEditingId(null);
-    setFormData({ name: '', shortcode: '' });
+  const stats = {
+    total: tables.length,
+    available: tables.filter(t => t.status === 'available').length,
+    occupied: tables.filter(t => t.status === 'occupied').length,
+    reserved: tables.filter(t => t.status === 'reserved').length,
   };
 
   return (
-    <div className="tables-page">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Tables Layout</h1>
-          <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Manage floor layout and table assignments</p>
-        </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-          <Plus size={18} /> Add New Table
-        </button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Table Management</h1>
+        <p className="text-gray-600 mt-1">Monitor and manage restaurant tables</p>
       </div>
 
-      <div className="tables-grid">
-        {tables.map(table => (
-          <div key={table.id} className="stat-card table-card" style={{ padding: '32px 24px', textAlign: 'center', position: 'relative' }}>
-            <div style={{ position: 'absolute', top: '12px', left: '12px' }}>
-               <div style={{ padding: '4px 10px', background: 'var(--bg-app)', borderRadius: '6px', fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>{table.shortcode}</div>
-            </div>
-            
-            <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '4px' }}>
-              <button onClick={() => openEdit(table)} className="btn btn-outline" style={{ padding: '6px', border: 'none', background: 'transparent', color: 'var(--text-muted)', width: '30px', height: '30px' }}>
-                <Edit2 size={13} />
-              </button>
-              <button onClick={() => deleteTable(table.id)} className="btn btn-outline" style={{ padding: '6px', border: 'none', background: 'transparent', color: 'var(--danger)', width: '30px', height: '30px' }}>
-                <Trash2 size={13} />
-              </button>
-            </div>
-
-            <div style={{ 
-              width: '56px', 
-              height: '56px', 
-              borderRadius: '16px', 
-              background: 'var(--primary-light)', 
-              color: 'var(--primary)', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              margin: '12px auto 16px',
-              border: '1px solid rgba(0,102,255,0.1)'
-            }}>
-              <Layout size={28} />
-            </div>
-
-            <h3 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>{table.name}</h3>
-            <p style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: '700', letterSpacing: '0.5px' }}>BILLING STATION</p>
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card variant="elevated">
+          <div className="text-center">
+            <p className="text-sm text-gray-600 font-medium">Total Tables</p>
+            <p className="text-3xl font-bold text-gray-900 mt-2">{stats.total}</p>
           </div>
-        ))}
+        </Card>
+        <Card variant="elevated">
+          <div className="text-center">
+            <p className="text-sm text-gray-600 font-medium">Available</p>
+            <p className="text-3xl font-bold text-green-600 mt-2">{stats.available}</p>
+          </div>
+        </Card>
+        <Card variant="elevated">
+          <div className="text-center">
+            <p className="text-sm text-gray-600 font-medium">Occupied</p>
+            <p className="text-3xl font-bold text-red-600 mt-2">{stats.occupied}</p>
+          </div>
+        </Card>
+        <Card variant="elevated">
+          <div className="text-center">
+            <p className="text-sm text-gray-600 font-medium">Reserved</p>
+            <p className="text-3xl font-bold text-orange-600 mt-2">{stats.reserved}</p>
+          </div>
+        </Card>
       </div>
 
-      {showModal && (
-        <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" style={{ maxWidth: '420px', padding: '32px' }} onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-8">
-              <h2 style={{ fontSize: '20px', fontWeight: '800' }}>{editingId ? 'Edit Table' : 'Add New Table'}</h2>
-              <X size={24} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={closeModal} />
+      {/* Tables Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        {tables.map((table) => {
+          const order = getTableOrder(table.id);
+          return (
+            <div
+              key={table.id}
+              className={`border-2 rounded-xl p-6 transition-all cursor-pointer ${getStatusColor(table.status)}`}
+            >
+              <div className="text-center">
+                {/* Table Number */}
+                <div className="w-16 h-16 mx-auto bg-white rounded-full flex items-center justify-center shadow-md mb-3">
+                  <span className="text-2xl font-bold text-gray-900">{table.number}</span>
+                </div>
+
+                {/* Table Info */}
+                <h3 className="font-bold text-gray-900 mb-2">Table {table.number}</h3>
+                
+                <div className="flex items-center justify-center gap-1 text-sm text-gray-600 mb-3">
+                  <Users size={16} />
+                  <span>{table.capacity} seats</span>
+                </div>
+
+                {/* Status Badge */}
+                <Badge variant={table.status} className="mb-3">
+                  {table.status}
+                </Badge>
+
+                {/* Order Info */}
+                {order && (
+                  <div className="mt-3 pt-3 border-t border-gray-300">
+                    <p className="text-xs text-gray-600 mb-1">Order #{order.id}</p>
+                    <p className="font-bold text-gray-900">{formatCurrency(order.total)}</p>
+                    <p className="text-xs text-gray-600 mt-1">{order.items.length} items</p>
+                  </div>
+                )}
+              </div>
             </div>
-            
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)' }}>TABLE NAME</label>
-                <input 
-                  className="search-input"
-                  placeholder="e.g. Table 1, Balcony 4" 
-                  required 
-                  value={formData.name}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  style={{ marginBottom: 0 }}
-                />
-              </div>
+          );
+        })}
+      </div>
 
-              <div style={{ marginBottom: '32px' }}>
-                <label style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)' }}>SHORTCODE</label>
-                <input 
-                  className="search-input"
-                  placeholder="e.g. T-1, B-4" 
-                  required 
-                  value={formData.shortcode}
-                  onChange={e => setFormData({ ...formData, shortcode: e.target.value })}
-                  style={{ marginBottom: 0 }}
-                />
-              </div>
-
-              <button 
-                type="submit" 
-                className="btn btn-primary" 
-                style={{ width: '100%', height: '56px', fontSize: '16px' }}
-                disabled={loading}
-              >
-                {loading ? (editingId ? 'Updating...' : 'Creating...') : (editingId ? 'Update Table' : 'Create Table')}
-              </button>
-            </form>
+      {/* Legend */}
+      <Card variant="elevated">
+        <h3 className="font-bold text-gray-900 mb-3">Status Legend</h3>
+        <div className="flex flex-wrap gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-green-100 border-2 border-green-300 rounded"></div>
+            <span className="text-sm text-gray-700">Available - Ready for customers</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-red-100 border-2 border-red-300 rounded"></div>
+            <span className="text-sm text-gray-700">Occupied - Currently serving</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-orange-100 border-2 border-orange-300 rounded"></div>
+            <span className="text-sm text-gray-700">Reserved - Booking confirmed</span>
           </div>
         </div>
-      )}
+      </Card>
     </div>
   );
 };

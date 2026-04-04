@@ -1,80 +1,111 @@
-/**
- * Direct ImageKit Upload via REST API with client-side signature generation.
- * This approach generates the signature locally without a backend.
- */
+// ImageKit Upload Utility
+// Uses ImageKit's upload API with proper authentication
 
-// Helper to convert File to Base64
-const fileToBase64 = (file) => new Promise((resolve, reject) => {
+const IMAGEKIT_PUBLIC_KEY = import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY;
+const IMAGEKIT_PRIVATE_KEY = import.meta.env.VITE_IMAGEKIT_PRIVATE_KEY;
+
+/**
+ * Convert file to base64
+ */
+const fileToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result.split(',')[1]); // Remove the data:image/jpeg;base64, prefix
+    reader.onload = () => resolve(reader.result);
     reader.onerror = (error) => reject(error);
-});
-
-// Helper to generate HMAC-SHA1 signature using Web Crypto API
-async function generateSignature(token, expire, privateKey) {
-    const encoder = new TextEncoder();
-    const keyData = encoder.encode(privateKey);
-    const messageData = encoder.encode(token + expire);
-
-    const cryptoKey = await crypto.subtle.importKey(
-        'raw',
-        keyData,
-        { name: 'HMAC', hash: 'SHA-1' },
-        false,
-        ['sign']
-    );
-
-    const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, messageData);
-    
-    // Convert ArrayBuffer to Hex String
-    return Array.from(new Uint8Array(signatureBuffer))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-}
-
-export const uploadImageToImageKit = async (file, fileName, folder = 'RestaurantItems') => {
-    try {
-        /**
-         * ⚠️ IMPORTANT: In a production app, the Private Key MUST NEVER be in the frontend.
-         * For this project bypass, we are generating the signature locally.
-         * Please replace the placeholder below with your real ImageKit Private Key.
-         */
-        const publicKey = "public_UwlZUVKBoqWEAGMd0RqLJGFp6n4=";
-        const privateKey = "private_hsCeuLWgJvTSjc02hpRiJfIvGSQ=";
-        const urlEndpoint = "https://ik.imagekit.io/peh3xvmh1";
-
-        const token = crypto.randomUUID();
-        const expire = Math.floor(Date.now() / 1000) + 1800; // 30 mins valid
-        const signature = await generateSignature(token, expire, privateKey);
-
-        const base64File = await fileToBase64(file);
-
-        const formData = new FormData();
-        formData.append("file", base64File);
-        formData.append("fileName", fileName);
-        formData.append("folder", folder);
-        formData.append("publicKey", publicKey);
-        formData.append("signature", signature);
-        formData.append("expire", expire.toString());
-        formData.append("token", token);
-
-        const response = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
-            method: "POST",
-            body: formData
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || "Upload failed");
-        }
-
-        const result = await response.json();
-        return result; // contains url, fileId, name, etc.
-    } catch (error) {
-        console.error("Manual ImageKit Upload Error:", error);
-        throw error;
-    }
+  });
 };
 
-export default uploadImageToImageKit;
+/**
+ * Generate HMAC-SHA1 signature using Web Crypto API
+ */
+const generateHmacSignature = async (message, key) => {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(key);
+  const messageData = encoder.encode(message);
+  
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-1' },
+    false,
+    ['sign']
+  );
+  
+  const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageData);
+  const signatureArray = Array.from(new Uint8Array(signature));
+  return signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
+/**
+ * Generate authentication parameters for ImageKit upload
+ */
+const getAuthenticationParameters = async () => {
+  const token = crypto.randomUUID();
+  // Use current time + 30 minutes (well within 1 hour limit)
+  const currentTime = Math.floor(Date.now() / 1000);
+  const expire = currentTime + 1800; // 30 minutes from now
+  
+  // Create signature: HMAC-SHA1(token + expire, privateKey)
+  const signatureString = token + expire;
+  const signature = await generateHmacSignature(signatureString, IMAGEKIT_PRIVATE_KEY);
+  
+  return {
+    token,
+    expire: String(expire),  // ImageKit expects string
+    signature
+  };
+};
+
+/**
+ * Upload image to ImageKit
+ * @param {File} file - The image file to upload
+ * @param {string} fileName - The name to save the file as
+ * @param {string} folder - The folder path in ImageKit (default: 'RestaurantItems')
+ * @returns {Promise<{url: string, fileId: string}>} - The uploaded image URL and file ID
+ */
+export const uploadImageToImageKit = async (file, fileName, folder = 'RestaurantItems') => {
+  try {
+    // Convert file to base64
+    const base64File = await fileToBase64(file);
+    
+    // Get authentication parameters
+    const authParams = await getAuthenticationParameters();
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('file', base64File);
+    formData.append('fileName', fileName);
+    formData.append('folder', folder);
+    formData.append('publicKey', IMAGEKIT_PUBLIC_KEY);
+    formData.append('signature', authParams.signature);
+    formData.append('expire', authParams.expire);
+    formData.append('token', authParams.token);
+
+    const response = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      console.error('ImageKit upload error:', data);
+      throw new Error(data.message || 'Failed to upload image');
+    }
+
+    return {
+      url: data.url,
+      fileId: data.fileId,
+      thumbnailUrl: data.thumbnailUrl,
+      name: data.name
+    };
+  } catch (error) {
+    console.error('Error uploading to ImageKit:', error);
+    throw error;
+  }
+};
+
+export default {
+  uploadImageToImageKit
+};

@@ -1,95 +1,150 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { 
-  onAuthStateChanged, 
-  signInWithPopup, 
-  signOut 
-} from 'firebase/auth';
-import { auth, googleProvider, db } from '../firebase/config';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { db, auth } from '../config/firebase';
+import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [restaurant, setRestaurant] = useState(null);
+  const [staffData, setStaffData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const loginWithGoogle = async () => {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      return result.user;
-    } catch (error) {
-      console.error("Login failed", error);
-      throw error;
-    }
-  };
-
-  const logout = () => signOut(auth);
-
-  const completeOnboarding = async (data) => {
-    if (!user) return;
-    const resRef = doc(db, 'restaurants', user.uid);
-    const newRes = {
-      ...data,
-      ownerUid: user.uid,
-      createdAt: new Date().toISOString(),
-      plan: 'basic',
-      isActive: false, // Inactive by default as requested
-      status: 'inactive',
-      startDate: null,
-      endDate: null,
-      onboardingComplete: true
-    };
-    await setDoc(resRef, newRes);
-    setRestaurant({ id: user.uid, ...newRes });
-  };
-
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
-        const resRef = doc(db, 'restaurants', user.uid);
-        const resSnap = await getDoc(resRef);
-        
-        if (resSnap.exists()) {
-          setRestaurant({ id: resSnap.id, ...resSnap.data() });
-        } else {
-          setRestaurant(null); // Triggers onboarding
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          // Fetch staff data using email as document ID
+          const staffDoc = await getDoc(doc(db, 'staff', firebaseUser.email));
+          if (staffDoc.exists()) {
+            const data = staffDoc.data();
+            setUser(firebaseUser);
+            setStaffData({
+              id: firebaseUser.email,
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              name: data.name,
+              access: data.access || [],
+              isAdmin: false,
+              ...data
+            });
+          } else {
+            // No staff data = Admin with full access
+            setUser(firebaseUser);
+            setStaffData({
+              id: firebaseUser.email,
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              name: 'Admin',
+              access: [], // Empty means all access for admin
+              isAdmin: true
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching staff data:', error);
+          setUser(null);
+          setStaffData(null);
         }
       } else {
-        setRestaurant(null);
+        setUser(null);
+        setStaffData(null);
       }
       setLoading(false);
     });
 
-    return unsubscribe;
-  }, []);
+    return () => unsubscribe();
+  }, [auth]);
 
-  const isSubscriptionActive = () => {
-    if (!restaurant) return false;
-    if (!restaurant.isActive) return false;
-    if (!restaurant.endDate) return false;
-    
-    const now = new Date();
-    const expiry = new Date(restaurant.endDate);
-    return now <= expiry;
+  const login = async (email, password) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Fetch staff data using email as document ID
+      const staffDoc = await getDoc(doc(db, 'staff', email));
+      let staffInfo;
+      
+      if (staffDoc.exists()) {
+        const data = staffDoc.data();
+        staffInfo = {
+          id: email,
+          uid: userCredential.user.uid,
+          email: email,
+          name: data.name,
+          access: data.access || [],
+          isAdmin: false,
+          ...data
+        };
+      } else {
+        // No staff data = Admin with full access
+        staffInfo = {
+          id: email,
+          uid: userCredential.user.uid,
+          email: email,
+          name: 'Admin',
+          access: [], // Empty means all access for admin
+          isAdmin: true
+        };
+      }
+      
+      setStaffData(staffInfo);
+      toast.success('Login successful!');
+      return staffInfo;
+    } catch (error) {
+      console.error('Login error:', error);
+      if (error.code === 'auth/invalid-credential') {
+        toast.error('Invalid email or password');
+      } else if (error.code === 'auth/user-not-found') {
+        toast.error('User not found');
+      } else if (error.code === 'auth/wrong-password') {
+        toast.error('Wrong password');
+      } else {
+        toast.error('Login failed. Please try again.');
+      }
+      throw error;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+      setStaffData(null);
+      toast.success('Logged out successfully');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Logout failed');
+    }
+  };
+
+  const hasAccess = (menuValue) => {
+    // Dashboard is only accessible to admin
+    if (menuValue === 'dashboard') {
+      return staffData?.isAdmin === true;
+    }
+    // Admin has access to everything
+    if (staffData?.isAdmin === true) return true;
+    // Check if user has access to the menu
+    return staffData?.access?.includes(menuValue) || false;
   };
 
   const value = {
     user,
-    restaurant,
-    loginWithGoogle,
-    logout,
+    staffData,
     loading,
-    completeOnboarding,
-    isSubscriptionActive
+    login,
+    logout,
+    hasAccess,
+    isAuthenticated: !!user,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
