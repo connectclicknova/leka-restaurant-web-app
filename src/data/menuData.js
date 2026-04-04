@@ -12,7 +12,7 @@ export const MENU_ITEMS = [
 ];
 
 // Restaurant details from environment variables
-export const RESTAURANT_NAME = import.meta.env.VITE_RESTAURANT_NAME || 'HR FOOD COURT';
+export const RESTAURANT_NAME = import.meta.env.VITE_RESTAURANT_NAME || 'LEKA Restaurant PRO';
 export const SUPPORT_PHONE = import.meta.env.VITE_RESTAURANT_MOBILE || '+91 9966850426';
 export const RESTAURANT_ADDRESS = import.meta.env.VITE_RESTAURANT_ADDRESS || '';
 export const RESTAURANT_GST = import.meta.env.VITE_RESTAURANT_GST || '';

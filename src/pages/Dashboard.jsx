@@ -329,7 +329,7 @@ const Dashboard = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1">Welcome to NOVA Restaurant Management System</p>
+          <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1">Welcome to LEKA Restaurant PRO</p>
         </div>
 
         {/* Date Filter */}

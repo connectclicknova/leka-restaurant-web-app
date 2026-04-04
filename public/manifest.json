@@ -1,7 +1,7 @@
 {
-  "name": "Restaurant Management System",
-  "short_name": "RMS",
-  "description": "Restaurant Management System - Billing, Orders, Kitchen & More",
+  "name": "LEKA Restaurant PRO",
+  "short_name": "LEKA PRO",
+  "description": "LEKA Restaurant PRO - Premium Restaurant Management System",
   "theme_color": "#ec2b25",
   "background_color": "#ffffff",
   "display": "standalone",

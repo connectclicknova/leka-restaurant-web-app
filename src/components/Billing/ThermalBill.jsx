@@ -24,7 +24,7 @@ const ThermalBill = React.forwardRef(({ billData }, ref) => {
   } = billData;
 
   // Restaurant details from env
-  const restaurantName = import.meta.env.VITE_RESTAURANT_NAME || 'HR FOOD COURT';
+  const restaurantName = import.meta.env.VITE_RESTAURANT_NAME || 'LEKA Restaurant PRO';
   const restaurantMobile = import.meta.env.VITE_RESTAURANT_MOBILE || '9966850426';
   const restaurantAddress = import.meta.env.VITE_RESTAURANT_ADDRESS || '';
   const restaurantGST = import.meta.env.VITE_RESTAURANT_GST || '';
