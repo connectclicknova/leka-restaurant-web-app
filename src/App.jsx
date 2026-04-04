@@ -12,8 +12,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import BillingPage from './pages/BillingPage';
 import MenuPage from './pages/MenuPage';
+import AllBills from './pages/AllBills';
 import TablesPage from './pages/TablesPage';
-import Orders from './pages/Orders';
 import Investment from './pages/Investment';
 import Payroll from './pages/Payroll';
 import Staff from './pages/Staff';
@@ -96,6 +96,14 @@ const App = () => {
                         } 
                       />
                       <Route 
+                        path="/all-bills" 
+                        element={
+                          <ProtectedRoute menuValue="all-bills">
+                            <AllBills />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
                         path="/menu" 
                         element={
                           <ProtectedRoute menuValue="menu">
@@ -108,14 +116,6 @@ const App = () => {
                         element={
                           <ProtectedRoute menuValue="tables">
                             <TablesPage />
-                          </ProtectedRoute>
-                        } 
-                      />
-                      <Route 
-                        path="/orders" 
-                        element={
-                          <ProtectedRoute menuValue="orders">
-                            <Orders />
                           </ProtectedRoute>
                         } 
                       />

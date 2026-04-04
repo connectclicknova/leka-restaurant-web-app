@@ -5,13 +5,12 @@ import {
   FileText, 
   UtensilsCrossed,
   Grid3x3,
-  ClipboardList,
-  ChefHat,
   BarChart3,
   Package, 
   Users,
   Settings,
   Wallet,
+  ReceiptText,
   X
 } from 'lucide-react';
 import { MENU_ITEMS, RESTAURANT_NAME } from '../../data/menuData';
@@ -26,13 +25,12 @@ const Sidebar = ({ isOpen, onClose }) => {
     FileText,
     UtensilsCrossed,
     Grid3x3,
-    ClipboardList,
-    ChefHat,
     BarChart3,
     Package,
     Users,
     Settings,
-    Wallet
+    Wallet,
+    ReceiptText
   };
 
   // Filter menu items based on user access
