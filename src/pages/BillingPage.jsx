@@ -1228,62 +1228,6 @@ const BillingPage = () => {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* Today's Billing Stats */}
-      <div className="bg-white border border-gray-200 p-3 md:p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm md:text-base font-bold text-gray-900">Today's Billing Summary</h2>
-          <span className="text-xs text-gray-500">{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-3">
-          {/* Total */}
-          <div className="bg-gray-50 border border-gray-200 p-2 md:p-3 text-center">
-            <p className="text-xs text-gray-600 mb-1">Total Bills</p>
-            <p className="text-lg md:text-xl font-bold text-gray-900">{billStats.total.count}</p>
-            <p className="text-xs md:text-sm text-gray-600">₹{billStats.total.amount.toFixed(0)}</p>
-          </div>
-          {/* Dine In */}
-          <div className="bg-blue-50 border border-blue-200 p-2 md:p-3 text-center">
-            <p className="text-xs text-blue-600 mb-1">Dine In</p>
-            <p className="text-lg md:text-xl font-bold text-blue-700">{billStats.dineIn.count}</p>
-            <p className="text-xs md:text-sm text-blue-600">₹{billStats.dineIn.amount.toFixed(0)}</p>
-          </div>
-          {/* Take Away */}
-          <div className="bg-purple-50 border border-purple-200 p-2 md:p-3 text-center">
-            <p className="text-xs text-purple-600 mb-1">Take Away</p>
-            <p className="text-lg md:text-xl font-bold text-purple-700">{billStats.takeAway.count}</p>
-            <p className="text-xs md:text-sm text-purple-600">₹{billStats.takeAway.amount.toFixed(0)}</p>
-          </div>
-          {/* Swiggy - Only shown when aggregators enabled */}
-          {ENABLE_AGGREGATORS && (
-            <div className="bg-orange-50 border border-orange-200 p-2 md:p-3 text-center">
-              <p className="text-xs text-orange-600 mb-1">Swiggy</p>
-              <p className="text-lg md:text-xl font-bold text-orange-700">{billStats.swiggy.count}</p>
-              <p className="text-xs md:text-sm text-orange-600">₹{billStats.swiggy.amount.toFixed(0)}</p>
-            </div>
-          )}
-          {/* Zomato - Only shown when aggregators enabled */}
-          {ENABLE_AGGREGATORS && (
-            <div className="bg-red-50 border border-red-200 p-2 md:p-3 text-center">
-              <p className="text-xs text-red-600 mb-1">Zomato</p>
-              <p className="text-lg md:text-xl font-bold text-red-700">{billStats.zomato.count}</p>
-              <p className="text-xs md:text-sm text-red-600">₹{billStats.zomato.amount.toFixed(0)}</p>
-            </div>
-          )}
-          {/* Paid */}
-          <div className="bg-green-50 border border-green-200 p-2 md:p-3 text-center">
-            <p className="text-xs text-green-600 mb-1">Paid</p>
-            <p className="text-lg md:text-xl font-bold text-green-700">{billStats.paid.count}</p>
-            <p className="text-xs md:text-sm text-green-600">₹{billStats.paid.amount.toFixed(0)}</p>
-          </div>
-          {/* Open/Unpaid */}
-          <div className="bg-yellow-50 border border-yellow-200 p-2 md:p-3 text-center">
-            <p className="text-xs text-yellow-600 mb-1">Unpaid</p>
-            <p className="text-lg md:text-xl font-bold text-yellow-700">{billStats.open.count}</p>
-            <p className="text-xs md:text-sm text-yellow-600">₹{billStats.open.amount.toFixed(0)}</p>
-          </div>
-        </div>
-      </div>
-
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900">Billing</h1>
@@ -1344,13 +1288,12 @@ const BillingPage = () => {
         )}
       </div>
 
-      {/* Add Bill Section */}
       {showAddBill && (
-        <div ref={addBillSectionRef} className="bg-white border border-gray-200 p-3 md:p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+        <div ref={addBillSectionRef} className="bg-white border border-gray-200 p-3 md:p-6 lg:h-[calc(100vh-140px)] flex flex-col">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 flex-1 min-h-0 overflow-hidden">
             {/* Column 1: Tables Selection or Customer Name */}
             {billType === 'dine-in' && (
-              <div className="lg:col-span-3 lg:border-r border-gray-200 lg:pr-4">
+              <div className="lg:col-span-2 lg:border-r border-gray-200 lg:pr-4 flex flex-col h-full overflow-hidden">
                 <h3 className="text-base md:text-lg font-bold text-gray-900 mb-3 md:mb-4">Select Table</h3>
                 
                 {/* Customer Name */}
@@ -1388,7 +1331,7 @@ const BillingPage = () => {
                 </div>
 
                 {/* Tables Grid */}
-                <div className="grid grid-cols-5 gap-2 max-h-96 overflow-y-auto">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 flex-1 overflow-y-auto pr-1 scrollbar-thin content-start">
                   {filteredTables.map(table => {
                     const openBillsCount = bills.filter(bill => bill.tableId === table.id && bill.status === 'open').length;
                     return (
@@ -1434,7 +1377,7 @@ const BillingPage = () => {
               </div>
             )}
             {(billType === 'take-away' || billType === 'swiggy' || billType === 'zomato') && (
-              <div className="lg:col-span-3 lg:border-r border-gray-200 lg:pr-4">
+              <div className="lg:col-span-2 lg:border-r border-gray-200 lg:pr-4 flex flex-col h-full">
                 <h3 className="text-base md:text-lg font-bold text-gray-900 mb-3 md:mb-4">Customer Details</h3>
                 {/* Customer Name for Take Away/Swiggy/Zomato */}
                 <div className="mb-3 md:mb-4">
@@ -1450,8 +1393,8 @@ const BillingPage = () => {
             )}
 
             {/* Column 2: Items Selection */}
-            <div className="lg:col-span-6 lg:border-r border-gray-200 lg:pr-4">
-              <h3 className="text-base md:text-lg font-bold text-gray-900 mb-3 md:mb-4">Select Items</h3>
+            <div className="lg:col-span-7 lg:border-r border-gray-200 lg:px-4 flex flex-col h-full overflow-hidden">
+              <h3 className="text-base md:text-lg font-bold text-gray-900 mb-3">Select Items</h3>
               
               {/* Item Search */}
               <div className="mb-3 md:mb-4">
@@ -1476,9 +1419,9 @@ const BillingPage = () => {
               </div>
 
               {/* Categories Sidebar + Items Grid */}
-              <div className="flex gap-3">
+              <div className="flex gap-3 flex-1 min-h-0">
                 {/* Categories Sidebar */}
-                <div className="w-28 md:w-32 flex-shrink-0 max-h-80 md:max-h-[32rem] overflow-y-auto border-r border-gray-200 pr-2">
+                <div className="w-28 md:w-32 flex-shrink-0 overflow-y-auto border-r border-gray-200 pr-2 scrollbar-thin">
                   <button
                     onClick={() => setSelectedCategory('')}
                     className={`w-full px-2 py-2 text-left text-xs md:text-sm mb-1 transition-colors cursor-pointer ${
@@ -1502,7 +1445,7 @@ const BillingPage = () => {
                 </div>
 
                 {/* Items List */}
-                <div ref={itemsListRef} className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-80 md:max-h-[32rem] overflow-y-auto">
+                <div ref={itemsListRef} className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 overflow-y-auto pr-1 scrollbar-thin content-start">
                 {filteredItems.map(item => {
                   const itemCategory = categories.find(cat => cat.id === item.categoryId);
                   return (
@@ -1548,9 +1491,9 @@ const BillingPage = () => {
             </div>
 
             {/* Column 3: Bill Summary */}
-            <div className="lg:col-span-3">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-900">Bill Summary</h3>
+            <div className="lg:col-span-3 lg:pl-4 flex flex-col h-full overflow-hidden">
+              <div className="flex items-center justify-between mb-4 flex-shrink-0">
+                <h3 className="text-base md:text-lg font-bold text-gray-900">Bill Summary</h3>
                 {billType === 'dine-in' && selectedTable && (
                   <button
                     onClick={() => startNewBillForTable(selectedTable)}
@@ -1562,7 +1505,7 @@ const BillingPage = () => {
                 )}
               </div>
               
-              <div className="space-y-2 max-h-64 md:max-h-80 overflow-y-auto mb-3 md:mb-4">
+              <div className="space-y-2 flex-1 overflow-y-auto mb-3 md:mb-4 pr-1 scrollbar-thin">
                 {billItems.length === 0 ? (
                   <p className="text-xs md:text-sm text-gray-500 text-center py-6 md:py-8">No items added</p>
                 ) : (
@@ -1628,7 +1571,7 @@ const BillingPage = () => {
               </div>
 
               {/* Subtotal, Discount, and Total */}
-              <div className="border-t-2 border-gray-900 pt-3 md:pt-4 mb-3 md:mb-4">
+              <div className="border-t-2 border-gray-900 pt-3 md:pt-4 mb-3 md:mb-4 flex-shrink-0 bg-white">
                 <div className="flex items-center justify-between mb-2 text-xs md:text-sm">
                   <span className="text-gray-700">Subtotal:</span>
                   <span className="font-medium">₹{calculateSubtotal()}</span>
@@ -1697,7 +1640,7 @@ const BillingPage = () => {
               )}
               
               {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-2 mb-2">
+              <div className="grid grid-cols-2 gap-2 mb-2 flex-shrink-0">
                 <button
                   onClick={handleSaveBill}
                   disabled={saving}
@@ -1755,6 +1698,63 @@ const BillingPage = () => {
           </div>
         </div>
       )}
+
+
+      {/* Today's Billing Stats */}
+      <div className="bg-white border border-gray-200 p-3 md:p-4 mb-4 md:mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm md:text-base font-bold text-gray-900">Today's Billing Summary</h2>
+          <span className="text-xs text-gray-500">{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-3">
+          {/* Total */}
+          <div className="bg-gray-50 border border-gray-200 p-2 md:p-3 text-center transition-all hover:shadow-sm">
+            <p className="text-[10px] md:text-xs text-gray-500 uppercase tracking-wider mb-1">Total</p>
+            <p className="text-base md:text-xl font-bold text-gray-900">{billStats.total.count}</p>
+            <p className="text-[10px] md:text-xs font-semibold text-[#ec2b25]">₹{billStats.total.amount.toFixed(0)}</p>
+          </div>
+          {/* Dine In */}
+          <div className="bg-blue-50 border border-blue-100 p-2 md:p-3 text-center transition-all hover:shadow-sm">
+            <p className="text-[10px] md:text-xs text-blue-600 uppercase tracking-wider mb-1">Dine In</p>
+            <p className="text-base md:text-xl font-bold text-blue-700">{billStats.dineIn.count}</p>
+            <p className="text-[10px] md:text-xs font-semibold text-blue-800">₹{billStats.dineIn.amount.toFixed(0)}</p>
+          </div>
+          {/* Take Away */}
+          <div className="bg-purple-50 border border-purple-100 p-2 md:p-3 text-center transition-all hover:shadow-sm">
+            <p className="text-[10px] md:text-xs text-purple-600 uppercase tracking-wider mb-1">Take Away</p>
+            <p className="text-base md:text-xl font-bold text-purple-700">{billStats.takeAway.count}</p>
+            <p className="text-[10px] md:text-xs font-semibold text-purple-800">₹{billStats.takeAway.amount.toFixed(0)}</p>
+          </div>
+          {/* Swiggy */}
+          {ENABLE_AGGREGATORS && (
+            <div className="bg-orange-50 border border-orange-100 p-2 md:p-3 text-center transition-all hover:shadow-sm">
+              <p className="text-[10px] md:text-xs text-orange-600 uppercase tracking-wider mb-1">Swiggy</p>
+              <p className="text-base md:text-xl font-bold text-orange-700">{billStats.swiggy.count}</p>
+              <p className="text-[10px] md:text-xs font-semibold text-orange-800">₹{billStats.swiggy.amount.toFixed(0)}</p>
+            </div>
+          )}
+          {/* Zomato */}
+          {ENABLE_AGGREGATORS && (
+            <div className="bg-red-50 border border-red-100 p-2 md:p-3 text-center transition-all hover:shadow-sm">
+              <p className="text-[10px] md:text-xs text-red-600 uppercase tracking-wider mb-1">Zomato</p>
+              <p className="text-base md:text-xl font-bold text-red-700">{billStats.zomato.count}</p>
+              <p className="text-[10px] md:text-xs font-semibold text-red-800">₹{billStats.zomato.amount.toFixed(0)}</p>
+            </div>
+          )}
+          {/* Paid */}
+          <div className="bg-green-50 border border-green-100 p-2 md:p-3 text-center transition-all hover:shadow-sm">
+            <p className="text-[10px] md:text-xs text-green-600 uppercase tracking-wider mb-1">Paid</p>
+            <p className="text-base md:text-xl font-bold text-green-700">{billStats.paid.count}</p>
+            <p className="text-[10px] md:text-xs font-semibold text-green-800">₹{billStats.paid.amount.toFixed(0)}</p>
+          </div>
+          {/* Unpaid */}
+          <div className="bg-yellow-50 border border-yellow-100 p-2 md:p-3 text-center transition-all hover:shadow-sm">
+            <p className="text-[10px] md:text-xs text-yellow-600 uppercase tracking-wider mb-1">Unpaid</p>
+            <p className="text-base md:text-xl font-bold text-yellow-700">{billStats.open.count}</p>
+            <p className="text-[10px] md:text-xs font-semibold text-yellow-800">₹{billStats.open.amount.toFixed(0)}</p>
+          </div>
+        </div>
+      </div>
 
       {/* Bills List */}
       <div className="bg-white border border-gray-200 p-3 md:p-6">
